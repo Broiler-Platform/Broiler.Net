@@ -21,6 +21,15 @@
 
   <!-- Repository-owned packaging overrides. -->
   <PropertyGroup>
+    <!--
+      First preview number the Publish workflow may use. Broiler.Net publishes to nuget.org
+      only and never used the retired GitHub Packages feed, so no preview number was spent
+      where nuget.org cannot see it and the floor is preview.1. The resolver takes the
+      higher of this floor and the next number after every preview already on nuget.org;
+      it never needs lowering.
+    -->
+    <VersionSuffix>preview.1</VersionSuffix>
+
     <!-- The package also ships the Public Suffix List, which stays under MPL-2.0 (see THIRD_PARTY_NOTICES.md). -->
     <PackageLicenseExpression>Apache-2.0 AND MPL-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Broiler-Platform/Broiler.Net</PackageProjectUrl>
