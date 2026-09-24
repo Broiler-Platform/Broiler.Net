@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / Release
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # The assembly is platform-neutral net10.0. Both legs run because host parsing uses
+        # the platform's IDNA (ICU) and the pinned PSL hashes must survive both checkouts.
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build
+        run: dotnet build Broiler.Net.slnx -c Release --nologo
+
+      - name: Test
+        run: dotnet test Broiler.Net.slnx -c Release --no-build --nologo --logger 'trx;LogFilePrefix=broiler-net' --results-directory test-results
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: test-results/
+          if-no-files-found: warn
+
+      - name: Pack and verify the package
+        shell: pwsh
+        run: ./eng/pack.ps1
+
+      # The shared packaging props only add README, icon and THIRD_PARTY_NOTICES.md; the PSL
+      # data is packed by the project, and its MPL-2.0 notice and license must never silently drop out.
+      - name: Verify bundled data, notices and license
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $package = Get-ChildItem artifacts -Filter *.nupkg | Select-Object -First 1
+          $zip = [IO.Compression.ZipFile]::OpenRead($package.FullName)
+          try {
+            foreach ($entry in 'THIRD_PARTY_NOTICES.md', 'data/public_suffix_list.dat', 'data/public-suffix-list.json') {
+              if (!$zip.GetEntry($entry)) { throw "Missing $entry in $($package.Name)." }
+            }
+            $reader = [IO.StreamReader]::new(@($zip.Entries | Where-Object FullName -like '*.nuspec')[0].Open())
+            try { [xml] $nuspec = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            $license = $nuspec.package.metadata.license
+            if ($license.type -ne 'expression' -or $license.'#text' -ne 'Apache-2.0 AND MPL-2.0') {
+              throw "Expected the license expression 'Apache-2.0 AND MPL-2.0' in $($package.Name)."
+            }
+          } finally { $zip.Dispose() }
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-packages-${{ matrix.os }}
+          path: artifacts/*
+          if-no-files-found: error

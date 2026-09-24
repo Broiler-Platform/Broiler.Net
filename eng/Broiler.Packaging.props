@@ -1,0 +1,132 @@
+<Project>
+
+  <!--
+    ==================================================================
+    Broiler.Packaging.props  (VENDORED COPY)
+    ==================================================================
+    Shared NuGet packaging metadata for every Broiler component.
+
+    Vendored copy. The canonical file is Broiler.Browser's
+    eng/Broiler.Packaging.props; edit it there and re-vendor, not here,
+    so this component still builds and packs standalone with no
+    dependency on a parent-repo file. Cross-component publication gates
+    are tracked in the aggregate repository's docs/ROADMAP.md under
+    "Release and distribution".
+
+    Precedence: a component's Directory.Build.props imports this file
+    FIRST, then may set its own overrides (PackageTags, Description,
+    IsPackable, RepositoryUrl) which win over the defaults below.
+    ==================================================================
+  -->
+
+  <PropertyGroup>
+    <!-- Version: lockstep across the whole suite during preview. -->
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>preview.1</VersionSuffix>
+
+    <!-- Identity -->
+    <Authors>Broiler contributors</Authors>
+    <Company>Broiler</Company>
+    <Product>Broiler</Product>
+    <Copyright>Copyright (c) Broiler contributors</Copyright>
+
+    <!-- License: SPDX expression, no embedded file needed. -->
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+
+    <!-- Project / repository links. RepositoryUrl is filled by SourceLink
+         from the component's own git origin (PublishRepositoryUrl below),
+         which keeps each component self-contained. -->
+    <PackageProjectUrl>https://github.com/Broiler-Platform</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- README + icon are packed by the ItemGroup below. -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+
+    <!-- Packability by naming convention: every library packs
+         EXCEPT tests, demos, and diagnostics. A project can still force
+         its own value with <IsPackable> in the .csproj (evaluated after
+         this import, so it wins). Apps/tooling in src/ don't import this
+         file and are packed by nothing. -->
+    <IsPackable>true</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.Tests'))">false</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.Demo'))">false</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.Diagnostic'))">false</IsPackable>
+    <!-- Build-time tools, benchmarks, and code generators never ship. -->
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.Benchmark'))">false</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.Benchmarks'))">false</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.DataTool'))">false</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.Generator'))">false</IsPackable>
+    <IsPackable Condition="$(MSBuildProjectName.EndsWith('.PerfTests'))">false</IsPackable>
+
+    <!-- API docs shipped for IntelliSense. The XML-doc warnings are
+         suppressed (consistent with the existing CS1591 policy) so that
+         partial/undocumented comments don't add noise to every build:
+         CS1570 malformed XML, CS1572 stray param, CS1573 missing param,
+         CS1574 unresolved cref, CS1587 misplaced doc, CS1591 missing comment,
+         CS1734 bad paramref. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1570;CS1572;CS1573;CS1574;CS1587;CS1591;CS1734</NoWarn>
+
+    <!-- Symbol packages -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- EnablePackageValidation waits for a published
+         PackageValidationBaselineVersion to diff against; on a
+         baseline-less first release it adds little. -->
+
+    <!-- Reproducible builds + SourceLink -->
+    <Deterministic>true</Deterministic>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true' Or '$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- Files packed into every package (only when IsPackable is true).
+       Paths are relative to THIS file so they resolve identically in
+       the canonical location and every vendored copy. -->
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)icon.png"
+          Pack="true" PackagePath="\" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)..\README.md"
+          Pack="true" PackagePath="\" Visible="false"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\README.md')" />
+    <None Include="$(MSBuildThisFileDirectory)..\THIRD_PARTY_NOTICES.md"
+          Pack="true" PackagePath="\" Visible="false"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\THIRD_PARTY_NOTICES.md')" />
+  </ItemGroup>
+
+  <!--
+    SOURCE LINK COMES FROM THE SDK, AND THERE IS DELIBERATELY NO PACKAGE
+    REFERENCE FOR IT HERE.
+
+    The .NET SDK ships Source Link as an SDK component and imports it
+    implicitly. Microsoft.NET.Sdk.SourceLink.props backs that implicit import
+    out the moment a Source Link PACKAGE is referenced:
+
+        <SuppressImplicitGitSourceLink
+            Condition="'$(PkgMicrosoft_SourceLink_Common)' != ''">true</SuppressImplicitGitSourceLink>
+
+    So a `Microsoft.SourceLink.GitHub` reference does not add Source Link. It
+    replaces the SDK's own copy with a pinned older one, and it is the only
+    thing that puts Microsoft.Build.Tasks.Git into the restore graph at all.
+    CVE-2026-62900 is published against Microsoft.Build.Tasks.Git and gives the
+    8.0.0 line NO patched version, so NuGet audit raises NU1902 against every
+    project this file reaches — an error wherever TreatWarningsAsErrors is set
+    (per component, not here) and a warning everywhere else, which is why one
+    build can log the same NU1902 two ways.
+
+    Measured rather than assumed: with no reference, SuppressImplicitGitSourceLink
+    is empty and the build still produces obj/<config>/<tfm>/<assembly>.sourcelink.json
+    mapping the repository root to raw.githubusercontent.com at the built commit,
+    for every target framework, in a shallow detached-HEAD checkout and in a
+    submodule layout; pack still stamps RepositoryUrl and RepositoryCommit and the
+    PDB still carries its source-link entry. The honest caveat is that audit
+    coverage leaves with the restore graph: no future Source Link advisory can
+    raise NU1902 here, because there is no package left for audit to see. Watch
+    the SDK instead.
+
+    So do not add one to make Source Link work; it already works.
+  -->
+
+</Project>

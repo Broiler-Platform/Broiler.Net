@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Broiler.Net</PackageId>
+    <Description>Dependency-neutral networking for Broiler hosts: an RFC 6265bis cookie engine with CHIPS partitioning, Public Suffix List site resolution, and a policy-aware HTTP transport.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Broiler.Net.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data/public_suffix_list.dat" LogicalName="Broiler.Net.public_suffix_list.dat" />
+    <!-- The PSL (MPL-2.0) and its metadata ship unmodified; THIRD_PARTY_NOTICES.md is packed by eng/Broiler.Packaging.props. -->
+    <None Include="Data/public-suffix-list.json" Pack="true" PackagePath="/data/" />
+    <None Include="Data/public_suffix_list.dat" Pack="true" PackagePath="/data/" />
+  </ItemGroup>
+</Project>

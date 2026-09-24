@@ -1,0 +1,30 @@
+<Project>
+
+  <!-- Chain to a parent Directory.Build.props when one exists (in-tree build, e.g.
+       Broiler.Browser). Skipped for standalone builds. The path is captured in a
+       property first so the inner quotes don't collide with the Condition. -->
+  <PropertyGroup>
+    <BroilerParentBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</BroilerParentBuildProps>
+  </PropertyGroup>
+  <Import Project="$(BroilerParentBuildProps)" Condition="'$(BroilerParentBuildProps)' != ''" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!-- Broiler NuGet packaging metadata (vendored; do not edit by hand). -->
+  <Import Project="$(MSBuildThisFileDirectory)eng\Broiler.Packaging.props" />
+
+  <!-- Repository-owned packaging overrides. -->
+  <PropertyGroup>
+    <!-- The package also ships the Public Suffix List, which stays under MPL-2.0 (see THIRD_PARTY_NOTICES.md). -->
+    <PackageLicenseExpression>Apache-2.0 AND MPL-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Broiler-Platform/Broiler.Net</PackageProjectUrl>
+    <PackageTags>broiler;cookies;rfc6265bis;chips;public-suffix-list;http;networking;browser</PackageTags>
+  </PropertyGroup>
+
+</Project>
