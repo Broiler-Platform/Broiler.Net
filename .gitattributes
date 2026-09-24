@@ -1,0 +1,5 @@
+* text=auto eol=lf
+# Preserve upstream bytes so the pinned SHA-256 checks work on every platform.
+src/Broiler.Net/Data/public_suffix_list.dat -text
+tests/Broiler.Net.Tests/Fixtures/test_psl.txt -text
+*.png binary

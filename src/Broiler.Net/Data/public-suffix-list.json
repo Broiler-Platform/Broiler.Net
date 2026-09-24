@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/publicsuffix/list",
+  "revision": "8af98195397e1891a32e4ad79fa60c87813fbaf7",
+  "sha256": "30f133414a4606da17d6506bf68e8d703534998bd5a2c8eef41a7ed8bd89f868",
+  "fixtureSha256": "8f50ad958916d6a8f79fba2363501475571acce752757f9126fe9d2f17dd920d",
+  "fixtureCaseCount": 78,
+  "license": "MPL-2.0 (list); CC0-1.0 (upstream test fixture)",
+  "includesPrivateDomains": true
+}
