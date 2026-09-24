@@ -1,0 +1,168 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version-suffix:
+        description: 'Optional preview.N (unused and at least the next preview). Empty selects automatically.'
+        type: string
+        default: ''
+      dry-run:
+        description: Validate and attach packages without pushing to nuget.org
+        type: boolean
+        default: true
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Resolve preview version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    env:
+      DRY_RUN: ${{ github.event_name == 'push' && 'false' || inputs.dry-run }}
+    steps:
+      # First, so a real publish without the secret stops before any setup or build.
+      - name: Require a NuGet.org API key
+        if: env.DRY_RUN != 'true'
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_TOKEN }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::Publishing to nuget.org needs the NUGET_TOKEN secret."
+            exit 1
+          fi
+      - name: Check out
+        uses: actions/checkout@v7
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Resolve version
+        id: version
+        env:
+          VERSION_SUFFIX: ${{ inputs.version-suffix }}
+        run: node eng/resolve-preview-version.mjs
+
+  validate:
+    name: Validate and pack
+    needs: version
+    uses: ./.github/workflows/ci.yml
+    with:
+      package-version: ${{ needs.version.outputs.version }}
+
+  publish:
+    name: Publish to nuget.org
+    needs: [version, validate]
+    runs-on: ubuntu-latest
+    env:
+      DRY_RUN: ${{ github.event_name == 'push' && 'false' || inputs.dry-run }}
+      PACKAGE_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Check out
+        uses: actions/checkout@v7
+      - name: Download validated packages
+        uses: actions/download-artifact@v8
+        with:
+          name: nuget-packages
+          path: artifacts
+      - name: Verify consumer restore from nuget.org
+        shell: pwsh
+        run: ./eng/verify-feed.ps1
+      # Packages and symbols are pushed by separate commands. When a .nupkg is skipped as a
+      # duplicate, NuGet also skips its .snupkg, so one combined push could never finish a
+      # run whose symbols failed after the package landed.
+      # The first attempt fails on a duplicate (409) instead of skipping it. nuget.org hides a
+      # new version for minutes while it validates, so another run can resolve the same
+      # version again, and that run must not pass as a publish. Only a re-run (attempt 2 or
+      # later) skips what is already on nuget.org, and the summary reports what it skipped.
+      - name: Push to nuget.org
+        id: push
+        if: env.DRY_RUN != 'true'
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_TOKEN }}
+        run: |
+          skip=()
+          if [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then skip=(--skip-duplicate); fi
+          push() {
+            local kind=$1 files=$2 log="$RUNNER_TEMP/push-$1.log" pushed existing result
+            shift 2
+            if ! dotnet nuget push "$files" --source https://api.nuget.org/v3/index.json \
+                --api-key "$NUGET_API_KEY" "${skip[@]}" "$@" 2>&1 | tee "$log"; then
+              # NuGet logs every request and response by method and status name, which are
+              # never localized. A 409 after a retried upload may be this run's own first try.
+              if grep -qE '^\s+Conflict https?://' "$log" \
+                  && [ "$(grep -cE '^\s+PUT https?://' "$log")" -eq 1 ]; then
+                echo "$kind=already on nuget.org, not pushed by this run" >> "$GITHUB_OUTPUT"
+                echo "$kind-duplicate=true" >> "$GITHUB_OUTPUT"
+              elif grep -qE '^\s+Conflict https?://' "$log"; then
+                echo "$kind=already on nuget.org after a retried upload, possibly from this run" >> "$GITHUB_OUTPUT"
+              else
+                echo "$kind=failed" >> "$GITHUB_OUTPUT"
+              fi
+              return 1
+            fi
+            pushed=$(grep -cE '^\s+Created https?://' "$log" || true)
+            existing=$(grep -cE '^\s+Conflict https?://' "$log" || true)
+            if [ "$existing" -eq 0 ]; then result='pushed'
+            elif [ "$pushed" -eq 0 ]; then result='already on nuget.org, skipped'
+            else result="$pushed pushed, $existing already on nuget.org and skipped"
+            fi
+            echo "$kind=$result" >> "$GITHUB_OUTPUT"
+          }
+          if ! push package 'artifacts/*.nupkg' --no-symbols; then
+            echo 'symbols=not attempted' >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          push symbols 'artifacts/*.snupkg'
+      - name: Summary
+        if: always()
+        env:
+          PUSH_OUTCOME: ${{ steps.push.outcome }}
+          PACKAGE_RESULT: ${{ steps.push.outputs.package }}
+          SYMBOLS_RESULT: ${{ steps.push.outputs.symbols }}
+          PACKAGE_DUPLICATE: ${{ steps.push.outputs.package-duplicate }}
+        run: |
+          {
+            echo "### Broiler.Net $PACKAGE_VERSION"
+            echo
+            if [ "$DRY_RUN" = "true" ]; then
+              echo 'Dry run: validated packages are attached; nothing was pushed.'
+            elif [ "$PUSH_OUTCOME" = 'skipped' ] || [ -z "$PUSH_OUTCOME" ]; then
+              echo 'Nothing was pushed: an earlier step failed or the run was cancelled.'
+            else
+              if [ "$PACKAGE_DUPLICATE" = 'true' ]; then
+                echo "$PACKAGE_VERSION is already on nuget.org, so this run pushed nothing. Most likely another run published it and nuget.org was still validating it when this run chose the version. Do not re-run this run; once the version is listed on nuget.org, start a new run for the next preview."
+              elif [ "$PUSH_OUTCOME" != 'success' ]; then
+                echo "The push did not finish ($PUSH_OUTCOME). Fix the cause, then use **Re-run failed jobs**, which skips what already landed; **Re-run all jobs** would resolve the version again."
+              elif [ "$PACKAGE_RESULT" = 'pushed' ] && [ "$SYMBOLS_RESULT" = 'pushed' ]; then
+                echo 'Published to nuget.org.'
+              else
+                echo "Attempt $GITHUB_RUN_ATTEMPT finished the push; anything already on nuget.org was skipped, not pushed."
+              fi
+              echo
+              echo "- Package: ${PACKAGE_RESULT:-not reported, see the Push to nuget.org log}"
+              echo "- Symbols: ${SYMBOLS_RESULT:-not reported, see the Push to nuget.org log}"
+            fi
+            echo
+            echo '```'
+            ls -1 artifacts 2>/dev/null || echo 'No packages were downloaded.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

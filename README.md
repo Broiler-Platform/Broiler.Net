@@ -255,14 +255,16 @@ Build, test, and create an unpublished local package:
 
 ```powershell
 dotnet test Broiler.Net.slnx -c Release
+node --test eng/resolve-preview-version.test.mjs
 ./eng/pack.ps1 -Output artifacts/packages
 ```
 
 The package carries the suite's packaging metadata (`eng/Broiler.Packaging.props`),
 icon, XML documentation, symbols and the bundled PSL data under `data/`. Its license
 expression is `Apache-2.0 AND MPL-2.0`: Apache-2.0 for Broiler.Net's code and MPL-2.0
-for the bundled Public Suffix List. CI (`.github/workflows/ci.yml`) builds, tests and
-packs on Windows and Linux, and checks the bundled data, notices and license expression.
+for the bundled Public Suffix List. CI (`.github/workflows/ci.yml`) builds and tests
+`Release` on Windows and Linux, then packs and verifies the package on Linux, checks the
+bundled data, notices and license expression, and attaches it as `nuget-packages`.
 
 Tests include deterministic time, table-driven algorithm cases, 10,000 seeded
 malformed fields, a seeded state-machine model, concurrency, quota and eviction cases,
@@ -287,3 +289,44 @@ fixture case count (which the tests check). Review and commit data, fixture and 
 together; release a new package version when publishing a changed dataset. The library
 does not update from the network at runtime. See `THIRD_PARTY_NOTICES.md` for data
 licensing and `LICENSE` for the package license.
+
+## Releasing
+
+Broiler.Net is published to nuget.org only, as `Broiler.Net`. **Publish**
+(`.github/workflows/publish.yml`) resolves one preview version, reruns CI with it, verifies
+that a fresh consumer restores the package from the release folder plus nuget.org (with an
+isolated package cache), and pushes the validated package and its symbols to nuget.org with
+the `NUGET_TOKEN` secret. The workflows and `eng/` scripts are shared with Broiler.HTML,
+Broiler.HtmlBridge and Broiler.Layout.
+
+1. Run **Publish** from `main` with the default `dry-run=true`. It validates the package
+   and attaches it to the run as `nuget-packages`; nothing is pushed.
+2. Publish with **either** a run with `dry-run=false` **or** a pushed `v0.1.0-preview.N`
+   tag. They are alternatives: a tag is not a follow-up to a dispatched publish.
+3. Wait until the new version is listed on nuget.org before publishing again. nuget.org
+   validates and indexes a new version for several minutes (longer for a new package ID),
+   and until then the next run sees no such version and chooses the same number again.
+   Such a run fails at the push because the version is already on nuget.org (409), and its
+   summary says it pushed nothing. Do not re-run it; start a new run once the version is
+   listed.
+
+The push sends the package first and its symbol package (`.snupkg`) second. If it fails
+(for example, a 403 because the API key may not push the package, or a symbol upload that
+fails after the package landed), fix the cause and use **Re-run failed jobs**. The re-run
+pushes the same validated packages and skips whatever an earlier attempt already pushed;
+the run summary lists what was pushed and what was skipped. Do not use **Re-run all jobs**:
+it chooses the version again, so it publishes the next preview number instead (or, from a
+tag whose version is already taken, fails).
+
+Preview numbers are cumulative: the next version is one past the highest
+`0.1.0-preview.N` already on nuget.org (unlisted versions included), and never below the
+`VersionSuffix` floor in `Directory.Build.props`. Broiler.Net never used another feed,
+so the floor is `preview.1` and the first release is `0.1.0-preview.1`. The optional
+`version-suffix` input or a tag may only name an unused number at or above the next one.
+
+Publishing needs the organization secret `NUGET_TOKEN` to be available to this repository,
+and its nuget.org API key must be allowed to push new packages whose ID matches
+`Broiler.Net` (a key limited to existing packages or to other IDs is rejected on the
+first push). A dry run checks neither, so confirm the key's scope and glob on nuget.org
+before the first run with `dry-run=false`. A run with `dry-run=false`, or from a tag,
+stops at its first step when the secret is missing.

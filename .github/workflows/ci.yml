@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      package-version:
+        description: Resolved preview version for a publish run
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -16,6 +22,7 @@ concurrency:
 env:
   DOTNET_NOLOGO: 'true'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  PACKAGE_VERSION: ${{ inputs.package-version }}
 
 jobs:
   build:
@@ -43,8 +50,21 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Test preview version selection
+        run: node --test eng/resolve-preview-version.test.mjs
+
       - name: Build
-        run: dotnet build Broiler.Net.slnx -c Release --nologo
+        run: |
+          args=()
+          if [ -n "$PACKAGE_VERSION" ]; then
+            args+=("-p:Version=$PACKAGE_VERSION" "-p:PackageVersion=$PACKAGE_VERSION")
+          fi
+          dotnet build Broiler.Net.slnx -c Release --nologo "${args[@]}"
 
       - name: Test
         run: dotnet test Broiler.Net.slnx -c Release --no-build --nologo --logger 'trx;LogFilePrefix=broiler-net' --results-directory test-results
@@ -58,12 +78,14 @@ jobs:
           if-no-files-found: warn
 
       - name: Pack and verify the package
+        if: matrix.os == 'ubuntu-latest'
         shell: pwsh
-        run: ./eng/pack.ps1
+        run: ./eng/pack.ps1 -Version $env:PACKAGE_VERSION
 
       # The shared packaging props only add README, icon and THIRD_PARTY_NOTICES.md; the PSL
       # data is packed by the project, and its MPL-2.0 notice and license must never silently drop out.
       - name: Verify bundled data, notices and license
+        if: matrix.os == 'ubuntu-latest'
         shell: pwsh
         run: |
           Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -82,8 +104,9 @@ jobs:
           } finally { $zip.Dispose() }
 
       - name: Upload packages
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v7
         with:
-          name: nuget-packages-${{ matrix.os }}
+          name: nuget-packages
           path: artifacts/*
           if-no-files-found: error
