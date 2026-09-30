@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   8
+// Annotated:        8/8
+// Exempt:           10
+// Human-reviewed:   0/8
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         8/7
+// Resource impact:  1/10 max
+// Unverified:       8
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 namespace Broiler.Net.Http;
 
 /// <summary>
@@ -6,6 +23,9 @@ namespace Broiler.Net.Http;
 /// (the source document). It is null only for browser-initiated navigations (address bar, bookmarks, history,
 /// UI reloads), which have no client.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=445DA9
+// Broiler-Falsified-If: a RequestContext initialized with only Destination and Client is not no-cors with credentials include and redirect follow
+// Broiler-Human:        PENDING
 public sealed record RequestContext
 {
     public required RequestDestination Destination { get; init; }
@@ -42,10 +62,19 @@ public sealed record RequestContext
     /// </summary>
     public Func<Uri, int, bool>? HopPolicy { get; init; }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=8EC5E0
+    // Broiler-Falsified-If: a request whose Mode is not Navigate reports IsNavigation true, so SendCore forces its credentials mode to include
+    // Broiler-Human:        PENDING
     public bool IsNavigation => Mode == RequestMode.Navigate;
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=B02FFE
+    // Broiler-Falsified-If: a navigate-mode request with an iframe destination reports IsTopLevelNavigation true, so SameSite=Lax cookies go with a cross-site frame load
+    // Broiler-Human:        PENDING
     public bool IsTopLevelNavigation => Mode == RequestMode.Navigate && Destination == RequestDestination.Document;
 
     /// <summary>A top-level navigation; <paramref name="initiator"/> is the source document, or null for browser UI.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=1F0EB2
+    // Broiler-Falsified-If: TopLevelNavigation drops the initiator from Client, so a navigation started by a cross-site page is sent as same-site with its SameSite=Strict cookies
+    // Broiler-Human:        PENDING
     public static RequestContext TopLevelNavigation(DocumentRequestContext? initiator) => new()
     {
         Destination = RequestDestination.Document, Client = initiator,
@@ -58,6 +87,9 @@ public sealed record RequestContext
     /// location or a link inside it), or null for browser UI. <paramref name="destination"/> is iframe, frame,
     /// object or embed.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=DD0FA7
+    // Broiler-Falsified-If: NestedNavigation stores the initiator rather than the container argument as Container, so a frame inside a cross-site container is sent as same-site
+    // Broiler-Human:        PENDING
     public static RequestContext NestedNavigation(DocumentRequestContext container, DocumentRequestContext? initiator,
         RequestDestination destination = RequestDestination.IFrame)
     {
@@ -77,6 +109,9 @@ public sealed record RequestContext
     /// setting as anonymous, as CSS Fonts fetches them; module scripts pass <see cref="CorsSetting.Anonymous"/>
     /// when the element has no attribute.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=E33E46
+    // Broiler-Falsified-If: Subresource with CorsSetting.Anonymous yields credentials include instead of same-origin, so cookies go with an anonymous cross-origin request
+    // Broiler-Human:        PENDING
     public static RequestContext Subresource(DocumentRequestContext client, RequestDestination destination, CorsSetting crossOrigin = CorsSetting.None)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -94,6 +129,9 @@ public sealed record RequestContext
     }
 
     /// <summary>fetch(), XHR and sendBeacon; the defaults are fetch()'s.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=B365A9
+    // Broiler-Falsified-If: Fetch accepts RequestMode.Navigate, so a script fetch() is treated as a navigation and sends credentials include
+    // Broiler-Human:        PENDING
     public static RequestContext Fetch(DocumentRequestContext client, RequestMode mode = RequestMode.Cors,
         CredentialsMode credentials = CredentialsMode.SameOrigin, RedirectMode redirect = RedirectMode.Follow)
     {
@@ -102,6 +140,9 @@ public sealed record RequestContext
         return new() { Destination = RequestDestination.Empty, Client = client, Mode = mode, Credentials = credentials, Redirect = redirect };
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=3840AF
+    // Broiler-Falsified-If: IsFrameDestination is true for a destination other than iframe, frame, object or embed, such as Document or Script
+    // Broiler-Human:        PENDING
     internal static bool IsFrameDestination(RequestDestination destination) =>
         destination is RequestDestination.IFrame or RequestDestination.Frame or RequestDestination.Object or RequestDestination.Embed;
 }
