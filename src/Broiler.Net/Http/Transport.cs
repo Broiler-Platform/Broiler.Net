@@ -79,7 +79,7 @@ public sealed class TransportException : HttpRequestException
     public TransportError Error { get; }
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=33E385
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=33E385
 // Broiler-Falsified-If: default options let a session follow more than 20 redirects for one request
 // Broiler-Human:        PENDING
 public sealed record BrowserNetworkSessionOptions

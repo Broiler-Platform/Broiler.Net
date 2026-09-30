@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "component": "Broiler.Net",
   "projects": [
     "src/Broiler.Net/Broiler.Net.csproj"
   ],

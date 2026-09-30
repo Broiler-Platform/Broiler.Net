@@ -10,7 +10,7 @@
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         7/5
-// Resource impact:  2/10 max
+// Resource impact:  3/10 max
 // Unverified:       8
 //
 // GENERATED - DO NOT EDIT MANUALLY
@@ -25,7 +25,7 @@ namespace Broiler.Net.Http;
 /// HTML base URL. <see cref="Origin"/> may be opaque (sandboxed or data: documents). Frames are children
 /// of the document that contains them, so the ancestor chain is <see cref="Parent"/> up to <see cref="TopLevel"/>.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=C641B7
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C641B7
 // Broiler-Falsified-If: a context built by CreateChild resolves TopLevel to anything other than the context at the root of its Parent chain
 // Broiler-Human:        PENDING
 public sealed class DocumentRequestContext
@@ -68,14 +68,14 @@ public sealed class DocumentRequestContext
     public bool IsCookieAverse => DocumentUrl.Scheme is not ("http" or "https");
 
     /// <summary>A document in a top-level traversable. The origin defaults to the URL's origin.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=F012DD
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=F012DD
     // Broiler-Falsified-If: an opaque origin passed for a sandboxed top-level document is replaced by the origin of its URL
     // Broiler-Human:        PENDING
     public static DocumentRequestContext CreateTopLevel(Uri documentUrl, Origin? origin = null) =>
         new(documentUrl, origin ?? Origin.FromUrl(documentUrl), null);
 
     /// <summary>A document nested in this one (iframe, frame, object, embed).</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=E290C4
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=E290C4
     // Broiler-Falsified-If: the returned context has no Parent, so a cross-site frame is treated as a top-level document for cookies
     // Broiler-Human:        PENDING
     public DocumentRequestContext CreateChild(Uri documentUrl, Origin? origin = null) =>

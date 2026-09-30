@@ -1,4 +1,4 @@
-#  Code Assurance
+# Broiler.Net Code Assurance
 
 GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance generate --root Broiler.Net`, which rewrites this file,
@@ -39,9 +39,9 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Value | Units |
 |---|---:|
-| None | 111 |
-| Low | 159 |
-| Medium | 0 |
+| None | 108 |
+| Low | 160 |
+| Medium | 2 |
 | High | 0 |
 | Unknown | 0 |
 | *not annotated* | 0 |
@@ -50,10 +50,10 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Value | Units |
 |---|---:|
-| None | 27 |
-| Low | 50 |
-| Medium | 30 |
-| High | 163 |
+| None | 30 |
+| Low | 38 |
+| Medium | 17 |
+| High | 185 |
 | Critical | 0 |
 | *not annotated* | 0 |
 
@@ -62,7 +62,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 | Metric | Value |
 |---|---:|
 | Maximum | 7 / 10 |
-| Average over annotated units | 1.6 / 10 |
+| Average over annotated units | 1.9 / 10 |
 | Units scored | 270 |
 
 ## High-security review areas
@@ -97,19 +97,34 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Cookies.CookieStore.BuildRequestHeader(CookieRequestContext)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.GetDocumentCookies(CookieDocumentContext)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Retrieve(CookieRequestContext, bool)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.CookieStore.Snapshot()` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Snapshot(out long)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Clear()` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.PruneExpired()` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
-- `Broiler.Net.Cookies.CookieStore.PurgeExpired(DateTimeOffset, List<CookieChange>)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.CookieStore.Live(CookieRecord, DateTimeOffset)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.EnforceLimits(Entry, List<CookieChange>)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Victim(IEnumerable<Entry>, bool)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Add(CookieRecord)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Unindex(Entry)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
 - `Broiler.Net.Cookies.CookieStore.Publish(CookieChangeBatch?, ref List<Exception>?)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.CookieStore.BucketKey` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.CookiePartitionKey` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.CookieRequestContext` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.CookieKey` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.ICookieService` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.ICookieService.ReceiveResponseCookie(string, CookieRequestContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.ICookieService.BuildRequestHeader(CookieRequestContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.ICookieService.SetDocumentCookie(string, CookieDocumentContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
+- `Broiler.Net.Cookies.ICookieService.GetDocumentCookies(CookieDocumentContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.OwnedHeaders` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.BadPorts` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.BrowserNetworkSession(BrowserNetworkSessionOptions?)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.BrowserNetworkSession.SendAsync(HttpRequestMessage, RequestContext, CancellationToken)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.BrowserNetworkSession.Send(HttpRequestMessage, RequestContext, CancellationToken)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.BrowserNetworkSession.TryGetCookie(DocumentRequestContext, out string)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.BrowserNetworkSession.TrySetCookie(DocumentRequestContext, string)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.BrowserNetworkSession.GetSiteForCookies(DocumentRequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.Dispose()` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.CheckSend(HttpRequestMessage, RequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.CheckContext(RequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
@@ -125,6 +140,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Http.BrowserNetworkSession.GetValues(HttpResponseMessage, string)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.GetSameSite(RequestContext, Origin?, Origin?, List<Uri>)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.GetPartitionKey(RequestContext, DocumentRequestContext?, Origin?, Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.BrowserNetworkSession.TopLevelOrigin(DocumentRequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.IsCrossOrigin(Origin?, Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.IsDowngrade(Origin, Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.IsFetchable(Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
@@ -148,6 +164,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Http.FetchHeaders.SafelistedResponseHeaders` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.NoCorsSafelistedNames` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.NoCorsUserAgentHeaders` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.FetchHeaders.Alphanumeric` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.TokenChars` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.LanguageChars` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.MaximumSafelistedValueLength, MaximumSafelistedTotalLength` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
@@ -205,11 +222,16 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Sites.Origin.CreateOpaque()` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.Origin.FromUrl(Uri)` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.Origin.Equals(Origin?)` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, human line PENDING
+- `Broiler.Net.Sites.Origin.Equals(object?)` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.Origin.ToString()` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SiteMatching` in `src/Broiler.Net/Sites/SiteMatching.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SiteMatching.GetSite(this ISiteResolver, Origin)` in `src/Broiler.Net/Sites/SiteMatching.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SiteMatching.IsSameSite(this ISiteResolver, Origin, Origin)` in `src/Broiler.Net/Sites/SiteMatching.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SchemefulSite` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
+- `Broiler.Net.Sites.ISiteResolver` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
+- `Broiler.Net.Sites.ISiteResolver.GetSite(Uri)` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
+- `Broiler.Net.Sites.ISiteResolver.IsPublicSuffix(string)` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
+- `Broiler.Net.Sites.ISiteResolver.GetRegistrableDomain(string)` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SiteResolver` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SiteResolver.Bundled` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
 - `Broiler.Net.Sites.SiteResolver.Default` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, human line PENDING
@@ -235,8 +257,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 227 |
-| Units required to carry one | 163 |
+| Units carrying a criterion | 237 |
+| Units required to carry one | 185 |
 | Required and missing | 0 |
 
 A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make

@@ -25,7 +25,7 @@ namespace Broiler.Net.Http;
 /// <see cref="GetScriptVisibleHeaders"/> and <see cref="ScriptVisibleStatusCode"/>, and no body when
 /// <see cref="Tainting"/> is <see cref="ResponseTainting.Opaque"/> or <see cref="ResponseTainting.OpaqueRedirect"/>.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=3B9949
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=3B9949
 // Broiler-Falsified-If: a member here other than Headers, StatusCode and Message returns a Set-Cookie value or an opaque response's real status
 // Broiler-Human:        PENDING
 public sealed class TransportResponse : IDisposable

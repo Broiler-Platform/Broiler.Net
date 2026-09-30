@@ -9,7 +9,7 @@
 // Human-reviewed:   0/29
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         24/21
+// Criteria:         28/25
 // Resource impact:  5/10 max
 // Unverified:       29
 //
@@ -39,17 +39,21 @@ public sealed record SchemefulSite
     public override string ToString() => $"{Scheme}://{Host}";
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=6633F4
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=6633F4
+// Broiler-Falsified-If: an implementation returns a public suffix such as co.uk as the registrable domain of a host below it
 // Broiler-Human:        PENDING
 public interface ISiteResolver
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=40D4C8
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=40D4C8
+    // Broiler-Falsified-If: an implementation returns equal sites for https://a.example/ and http://a.example/
     // Broiler-Human:        PENDING
     SchemefulSite? GetSite(Uri url);
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=4F36F7
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=4F36F7
+    // Broiler-Falsified-If: an implementation reports co.uk as not a public suffix, so a cookie with a Domain attribute of co.uk is accepted
     // Broiler-Human:        PENDING
     bool IsPublicSuffix(string canonicalHost);
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=C32265
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=C32265
+    // Broiler-Falsified-If: an implementation returns co.uk instead of example.co.uk as the registrable domain of www.example.co.uk
     // Broiler-Human:        PENDING
     string? GetRegistrableDomain(string canonicalHost);
 }
@@ -159,7 +163,7 @@ public sealed class SiteResolver : ISiteResolver
 // Broiler-Human:        PENDING
 public static class HostNames
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3CBAC5
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=3CBAC5
     // Broiler-Falsified-If: a hex letter from a to f is missing from the set, so the host "1.0xff" stays a domain instead of canonicalizing to "1.0.0.255"
     // Broiler-Human:        PENDING
     private static readonly SearchValues<char> HexDigits = SearchValues.Create("0123456789abcdefABCDEF");
@@ -283,7 +287,7 @@ public static class HostNames
             (last.Length >= 2 && last[0] == '0' && last[1] is 'x' or 'X' && !last[2..].ContainsAnyExcept(HexDigits));
     }
 
-    // Broiler-AI:           Origin=AI; Spec=URL s3.5; IP=Low; Security=High; Resources=2; Fingerprint=FC9FA6
+    // Broiler-AI:           Origin=AI; Spec=URL s3.5; IP=Low; Security=High; Resources=3; Fingerprint=FC9FA6
     // Broiler-Falsified-If: a four-part host with a part above 255, such as "256.0.0.1", yields an address instead of failing
     // Broiler-Human:        PENDING
     private static bool TryParseIPv4(string name, out string host)

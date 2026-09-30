@@ -53,7 +53,7 @@ public enum ResponseTainting { Basic, Cors, Opaque, OpaqueRedirect }
 public enum CorsSetting { None, Anonymous, UseCredentials }
 
 /// <summary>HTML's CORS settings attribute.</summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=D5B94C
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=D5B94C
 // Broiler-Falsified-If: a member here reads a missing crossorigin attribute as anything other than CorsSetting.None, so an element without the attribute is fetched in cors mode
 // Broiler-Human:        PENDING
 public static class CorsSettings

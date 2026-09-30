@@ -8,8 +8,8 @@
 // Exempt:           45
 // Human-reviewed:   0/23
 // IP risk:          Low
-// Security risk:    Medium
-// Criteria:         8/0
+// Security risk:    High
+// Criteria:         13/8
 // Resource impact:  1/10 max
 // Unverified:       23
 //
@@ -27,13 +27,13 @@ public enum CookieSameSite { Default, Lax, Strict, None }
 public enum SameSiteStatus { CrossSite, SameSite }
 
 /// <summary>Host-derived partition identity; never infer it from the destination alone.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=8A0D78
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=8A0D78
 // Broiler-Falsified-If: two keys with the same top-level site and different HasCrossSiteAncestor values compare equal
 // Broiler-Human:        PENDING
 public sealed record CookiePartitionKey(SchemefulSite TopLevelSite, bool HasCrossSiteAncestor = false);
 
 /// <summary>Trusted host inputs. Same-site status must include ancestor and redirect context.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E2EDBD
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=E2EDBD
 // Broiler-Falsified-If: a context built without IsTopLevelNavigation lets a Lax cookie through on a cross-site request
 // Broiler-Human:        PENDING
 public sealed record CookieRequestContext(
@@ -45,13 +45,13 @@ public sealed record CookieRequestContext(
 // Broiler-Human:        PENDING
 public sealed record CookieDocumentContext(Uri Url, SameSiteStatus SameSite, CookiePartitionKey? PartitionKey = null);
 
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1A6E29
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=1A6E29
 // Broiler-Falsified-If: two keys that differ only in HostOnly or PartitionKey compare equal, so one cookie replaces the other
 // Broiler-Human:        PENDING
 public sealed record CookieKey(string Name, string Domain, bool HostOnly, string Path, CookiePartitionKey? PartitionKey);
 
 /// <summary>An immutable stored cookie. Only the store can construct or change a record.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=31692A
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=31692A
 // Broiler-Falsified-If: code outside Broiler.Net can construct a CookieRecord or change its Value through a with expression
 // Broiler-Human:        PENDING
 public sealed record CookieRecord
@@ -99,7 +99,7 @@ public enum CookieDecision
     RejectedSecureOverlay, RejectedSameSite, RejectedPrefix, RejectedPartition, Evicted
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=54C6A0
+// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=54C6A0
 // Broiler-Human:        PENDING
 public readonly record struct CookieResult(CookieDecision Decision)
 {
@@ -123,7 +123,7 @@ public sealed record CookieChangeBatch(long Revision, IReadOnlyList<CookieChange
 /// Quotas. A site bucket is (registrable domain of the cookie's Domain, or the host itself for IP addresses
 /// and public suffixes; partition key), so subdomains share one budget and embedded sites never share one.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=24ED08
+// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=24ED08
 // Broiler-Human:        PENDING
 public sealed record CookieStoreOptions
 {
@@ -143,20 +143,25 @@ public sealed record CookieStoreOptions
     }
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=30F158
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=30F158
+// Broiler-Falsified-If: an implementation serves the document methods with HTTP privileges, so GetDocumentCookies returns an HttpOnly cookie
 // Broiler-Human:        PENDING
 public interface ICookieService
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=B0E6BB
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=B0E6BB
+    // Broiler-Falsified-If: an implementation stores a Set-Cookie field whose Domain attribute the host of the context URL does not domain-match
     // Broiler-Human:        PENDING
     CookieResult ReceiveResponseCookie(string header, CookieRequestContext context);
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=F7FB5D
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=F7FB5D
+    // Broiler-Falsified-If: the header an implementation builds carries a cookie whose Domain or Path does not match the context URL
     // Broiler-Human:        PENDING
     string BuildRequestHeader(CookieRequestContext context);
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=A4646E
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=A4646E
+    // Broiler-Falsified-If: an implementation lets a document assignment create a cookie with the HttpOnly attribute or replace an existing HttpOnly cookie
     // Broiler-Human:        PENDING
     CookieResult SetDocumentCookie(string assignment, CookieDocumentContext context);
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=AB33B7
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=AB33B7
+    // Broiler-Falsified-If: an implementation includes an HttpOnly cookie in the string it returns for document.cookie
     // Broiler-Human:        PENDING
     string GetDocumentCookies(CookieDocumentContext context);
 }

@@ -1,4 +1,4 @@
-# Human Review: 
+# Human Review: Broiler.Net
 
 GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance generate --root Broiler.Net`, which rewrites this file,
@@ -88,21 +88,21 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Net/Cookies/CookieObserverException.cs` | 2 | 2 | 0 | 2 | None | Low | 1/0 |
 | `src/Broiler.Net/Cookies/CookieParser.cs` | 31 | 20 | 11 | 20 | Low | High | 19/11 |
 | `src/Broiler.Net/Cookies/CookiePolicy.cs` | 11 | 10 | 1 | 10 | Low | High | 9/8 |
-| `src/Broiler.Net/Cookies/CookieStore.cs` | 46 | 30 | 16 | 30 | Low | High | 27/20 |
-| `src/Broiler.Net/Cookies/CookieTypes.cs` | 68 | 23 | 45 | 23 | Low | Medium | 8/0 |
+| `src/Broiler.Net/Cookies/CookieStore.cs` | 46 | 30 | 16 | 30 | Low | High | 28/22 |
+| `src/Broiler.Net/Cookies/CookieTypes.cs` | 68 | 23 | 45 | 23 | Low | High | 13/8 |
 | `src/Broiler.Net/Http/BroilerUserAgent.cs` | 8 | 8 | 0 | 8 | Low | Low | 8/0 |
-| `src/Broiler.Net/Http/BrowserNetworkSession.cs` | 48 | 41 | 7 | 41 | Low | High | 40/25 |
+| `src/Broiler.Net/Http/BrowserNetworkSession.cs` | 48 | 41 | 7 | 41 | Low | High | 40/31 |
 | `src/Broiler.Net/Http/DocumentCookieAccess.cs` | 11 | 7 | 4 | 7 | Low | High | 6/6 |
 | `src/Broiler.Net/Http/DocumentRequestContext.cs` | 11 | 8 | 3 | 8 | Low | High | 7/5 |
-| `src/Broiler.Net/Http/FetchHeaders.cs` | 33 | 33 | 0 | 33 | Low | High | 33/29 |
-| `src/Broiler.Net/Http/LoopbackRouting.cs` | 16 | 13 | 3 | 13 | Low | High | 12/11 |
+| `src/Broiler.Net/Http/FetchHeaders.cs` | 33 | 33 | 0 | 33 | Low | High | 33/30 |
+| `src/Broiler.Net/Http/LoopbackRouting.cs` | 16 | 13 | 3 | 13 | Medium | High | 12/11 |
 | `src/Broiler.Net/Http/RequestContext.cs` | 18 | 8 | 10 | 8 | Low | High | 8/7 |
 | `src/Broiler.Net/Http/RequestTypes.cs` | 43 | 9 | 34 | 9 | Low | High | 2/2 |
 | `src/Broiler.Net/Http/Transport.cs` | 22 | 9 | 13 | 9 | Low | High | 7/6 |
 | `src/Broiler.Net/Http/TransportResponse.cs` | 14 | 8 | 6 | 8 | Low | High | 5/3 |
-| `src/Broiler.Net/Sites/Origin.cs` | 14 | 9 | 5 | 9 | Low | High | 8/6 |
+| `src/Broiler.Net/Sites/Origin.cs` | 14 | 9 | 5 | 9 | Low | High | 8/7 |
 | `src/Broiler.Net/Sites/SiteMatching.cs` | 3 | 3 | 0 | 3 | Low | High | 3/3 |
-| `src/Broiler.Net/Sites/SiteResolver.cs` | 34 | 29 | 5 | 29 | Low | High | 24/21 |
+| `src/Broiler.Net/Sites/SiteResolver.cs` | 34 | 29 | 5 | 29 | Low | High | 28/25 |
 
 ## 7. Decisions Recorded
 
@@ -179,14 +179,16 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: an HttpOnly cookie that matches the document URL appears in the returned string
 - `Broiler.Net.Cookies.CookieStore.Retrieve(CookieRequestContext, bool)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=RFC-6265bis s5.8.3, `23A798`, PENDING
   - Falsified if: a record whose Expires is at or before the read's clock reading is included in the returned header
+- `Broiler.Net.Cookies.CookieStore.Snapshot()` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=none cited, `18A15A`, PENDING
+  - Falsified if: Snapshot() leaves out a live cookie, HttpOnly ones included, that Snapshot(out long) returns for the same store state
 - `Broiler.Net.Cookies.CookieStore.Snapshot(out long)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=none cited, `64C1BE`, PENDING
   - Falsified if: the returned revision is not the revision of the last batch whose changes the returned records reflect
 - `Broiler.Net.Cookies.CookieStore.Clear()` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=none cited, `2783CB`, PENDING
   - Falsified if: a record that had already expired is counted in the return value or published as Cleared instead of Expired
 - `Broiler.Net.Cookies.CookieStore.PruneExpired()` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=RFC-6265bis s5.7, `3EB1C3`, PENDING
   - Falsified if: a Changed observer runs while PruneExpired still holds _sync
-- `Broiler.Net.Cookies.CookieStore.PurgeExpired(DateTimeOffset, List<CookieChange>)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=RFC-6265bis s5.7, `6F6BCA`, PENDING
-  - Falsified if: after a purge, _nextExpiry is later than the earliest Expires among the remaining records, so a later mutation leaves an expired record in place
+- `Broiler.Net.Cookies.CookieStore.Live(CookieRecord, DateTimeOffset)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=none cited, `AC3BC5`, PENDING
+  - Falsified if: a persistent cookie whose Expires equals the current instant is treated as live
 - `Broiler.Net.Cookies.CookieStore.EnforceLimits(Entry, List<CookieChange>)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=RFC-6265bis s5.7, `AE7EE5`, PENDING
   - Falsified if: after an insert returns, one site bucket holds more than MaximumCookiesPerSite records, or the store holds more than MaximumCookies
 - `Broiler.Net.Cookies.CookieStore.Victim(IEnumerable<Entry>, bool)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=RFC-6265bis s5.7, `F12C65`, PENDING
@@ -197,6 +199,24 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a record removed from _cookies is still found by Retrieve through the _byDomain index
 - `Broiler.Net.Cookies.CookieStore.Publish(CookieChangeBatch?, ref List<Exception>?)` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=none cited, `0B8EB7`, PENDING
   - Falsified if: an observer that throws prevents a later observer in the invocation list from being called
+- `Broiler.Net.Cookies.CookieStore.BucketKey` in `src/Broiler.Net/Cookies/CookieStore.cs` - Security=High, Spec=none cited, `AD4675`, PENDING
+  - Falsified if: two keys with the same Site and different Partition values compare equal
+- `Broiler.Net.Cookies.CookiePartitionKey` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `8A0D78`, PENDING
+  - Falsified if: two keys with the same top-level site and different HasCrossSiteAncestor values compare equal
+- `Broiler.Net.Cookies.CookieRequestContext` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `E2EDBD`, PENDING
+  - Falsified if: a context built without IsTopLevelNavigation lets a Lax cookie through on a cross-site request
+- `Broiler.Net.Cookies.CookieKey` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `1A6E29`, PENDING
+  - Falsified if: two keys that differ only in HostOnly or PartitionKey compare equal, so one cookie replaces the other
+- `Broiler.Net.Cookies.ICookieService` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `30F158`, PENDING
+  - Falsified if: an implementation serves the document methods with HTTP privileges, so GetDocumentCookies returns an HttpOnly cookie
+- `Broiler.Net.Cookies.ICookieService.ReceiveResponseCookie(string, CookieRequestContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `B0E6BB`, PENDING
+  - Falsified if: an implementation stores a Set-Cookie field whose Domain attribute the host of the context URL does not domain-match
+- `Broiler.Net.Cookies.ICookieService.BuildRequestHeader(CookieRequestContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `F7FB5D`, PENDING
+  - Falsified if: the header an implementation builds carries a cookie whose Domain or Path does not match the context URL
+- `Broiler.Net.Cookies.ICookieService.SetDocumentCookie(string, CookieDocumentContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `A4646E`, PENDING
+  - Falsified if: an implementation lets a document assignment create a cookie with the HttpOnly attribute or replace an existing HttpOnly cookie
+- `Broiler.Net.Cookies.ICookieService.GetDocumentCookies(CookieDocumentContext)` in `src/Broiler.Net/Cookies/CookieTypes.cs` - Security=High, Spec=none cited, `AB33B7`, PENDING
+  - Falsified if: an implementation includes an HttpOnly cookie in the string it returns for document.cookie
 - `Broiler.Net.Http.BrowserNetworkSession` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `915513`, PENDING
   - Falsified if: a Cookie header is attached to a request whose credentials mode is omit, or to the cross-origin hop of a same-origin-credentials request
 - `Broiler.Net.Http.BrowserNetworkSession.OwnedHeaders` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `02CEF0`, PENDING
@@ -205,6 +225,16 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a port on the Fetch bad port list, such as 25, 6697 or 10080, is missing from the set, so a request to it is sent
 - `Broiler.Net.Http.BrowserNetworkSession.BrowserNetworkSession(BrowserNetworkSessionOptions?)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `BAB4B0`, PENDING
   - Falsified if: options whose Sites differ from the supplied cookie store's resolver construct a session instead of throwing ArgumentException
+- `Broiler.Net.Http.BrowserNetworkSession.SendAsync(HttpRequestMessage, RequestContext, CancellationToken)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `5AA4DE`, PENDING
+  - Falsified if: a call made after Dispose, or with a null request or context, reaches SendCore instead of throwing before any work starts
+- `Broiler.Net.Http.BrowserNetworkSession.Send(HttpRequestMessage, RequestContext, CancellationToken)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `7D34F0`, PENDING
+  - Falsified if: the synchronous path awaits real asynchronous work, so GetResult is called on a ValueTask that has not completed
+- `Broiler.Net.Http.BrowserNetworkSession.TryGetCookie(DocumentRequestContext, out string)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `19158B`, PENDING
+  - Falsified if: document.cookie read through the session differs from DocumentCookies.TryGetCookie for the same document
+- `Broiler.Net.Http.BrowserNetworkSession.TrySetCookie(DocumentRequestContext, string)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `F52297`, PENDING
+  - Falsified if: a document.cookie write through the session lands in a store other than Cookies, so the next request does not carry it
+- `Broiler.Net.Http.BrowserNetworkSession.GetSiteForCookies(DocumentRequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `923121`, PENDING
+  - Falsified if: it returns a site for cookies that differs from DocumentCookies.GetSiteForCookies for the same document
 - `Broiler.Net.Http.BrowserNetworkSession.Dispose()` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `3AB337`, PENDING
   - Falsified if: two threads calling Dispose at the same time both dispose the invoker, or a second Dispose call throws
 - `Broiler.Net.Http.BrowserNetworkSession.CheckSend(HttpRequestMessage, RequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `1434B7`, PENDING
@@ -235,6 +265,8 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a request whose redirect chain passes through a cross-site URL is given SameSite status, so Strict cookies go with it
 - `Broiler.Net.Http.BrowserNetworkSession.GetPartitionKey(RequestContext, DocumentRequestContext?, Origin?, Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `AC11E5`, PENDING
   - Falsified if: a request used by an iframe that is cross-site with its top-level document gets a partition key whose cross-site ancestor bit is false
+- `Broiler.Net.Http.BrowserNetworkSession.TopLevelOrigin(DocumentRequestContext)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `ABD447`, PENDING
+  - Falsified if: it returns an origin that differs from DocumentCookieAccess.TopLevelOrigin for the same document
 - `Broiler.Net.Http.BrowserNetworkSession.IsCrossOrigin(Origin?, Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `8D4B53`, PENDING
   - Falsified if: a URL that differs from the request origin only in scheme or port is reported as not cross-origin
 - `Broiler.Net.Http.BrowserNetworkSession.IsDowngrade(Origin, Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `E06518`, PENDING
@@ -281,6 +313,8 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a name other than Accept, Accept-Language, Content-Language and Content-Type is in the set, so a no-cors request keeps a header that needs a preflight
 - `Broiler.Net.Http.FetchHeaders.NoCorsUserAgentHeaders` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=none cited, `EB37B1`, PENDING
   - Falsified if: a name other than User-Agent, Range, Cache-Control and Pragma is in the set, so a no-cors request keeps it whatever its value
+- `Broiler.Net.Http.FetchHeaders.Alphanumeric` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=none cited, `672C2C`, PENDING
+  - Falsified if: a character other than an ASCII digit or letter is in the string, widening both the token and the language character sets
 - `Broiler.Net.Http.FetchHeaders.TokenChars` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=RFC-9110 s5.6.2, `462BE1`, PENDING
   - Falsified if: a character outside tchar, such as ':', '/' or a space, is in the set, so IsHeaderName accepts a name carrying it
 - `Broiler.Net.Http.FetchHeaders.LanguageChars` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.2, `593472`, PENDING
@@ -395,6 +429,8 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: FromUrl of a blob: URL wrapping a data: or file: URL returns a tuple origin instead of a new opaque origin
 - `Broiler.Net.Sites.Origin.Equals(Origin?)` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, Spec=none cited, `3BB49C`, PENDING
   - Falsified if: Equals returns true for tuple origins that differ only in port, such as https://a.example and https://a.example:8443
+- `Broiler.Net.Sites.Origin.Equals(object?)` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, Spec=none cited, `41A6C8`, PENDING
+  - Falsified if: Equals(object) disagrees with Equals(Origin?) for the same Origin argument
 - `Broiler.Net.Sites.Origin.ToString()` in `src/Broiler.Net/Sites/Origin.cs` - Security=High, Spec=none cited, `59477B`, PENDING
   - Falsified if: ToString of https://a.example:8443 omits :8443, so a response allowing https://a.example passes the CORS check for that page
 - `Broiler.Net.Sites.SiteMatching` in `src/Broiler.Net/Sites/SiteMatching.cs` - Security=High, Spec=none cited, `94027E`, PENDING
@@ -405,6 +441,14 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: IsSameSite returns true when one origin is opaque and the other is a tuple origin
 - `Broiler.Net.Sites.SchemefulSite` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `0248F9`, PENDING
   - Falsified if: two SchemefulSite values with the same host but the schemes "http" and "https" compare equal
+- `Broiler.Net.Sites.ISiteResolver` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `6633F4`, PENDING
+  - Falsified if: an implementation returns a public suffix such as co.uk as the registrable domain of a host below it
+- `Broiler.Net.Sites.ISiteResolver.GetSite(Uri)` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `40D4C8`, PENDING
+  - Falsified if: an implementation returns equal sites for https://a.example/ and http://a.example/
+- `Broiler.Net.Sites.ISiteResolver.IsPublicSuffix(string)` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `4F36F7`, PENDING
+  - Falsified if: an implementation reports co.uk as not a public suffix, so a cookie with a Domain attribute of co.uk is accepted
+- `Broiler.Net.Sites.ISiteResolver.GetRegistrableDomain(string)` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `C32265`, PENDING
+  - Falsified if: an implementation returns co.uk instead of example.co.uk as the registrable domain of www.example.co.uk
 - `Broiler.Net.Sites.SiteResolver` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `3793E1`, PENDING
   - Falsified if: with the bundled list GetRegistrableDomain("a.b.example.co.uk") returns anything other than "example.co.uk"
 - `Broiler.Net.Sites.SiteResolver.Bundled` in `src/Broiler.Net/Sites/SiteResolver.cs` - Security=High, Spec=none cited, `9617D0`, PENDING

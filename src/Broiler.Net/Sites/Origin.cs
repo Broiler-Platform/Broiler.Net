@@ -9,7 +9,7 @@
 // Human-reviewed:   0/9
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         8/6
+// Criteria:         8/7
 // Resource impact:  3/10 max
 // Unverified:       9
 //
@@ -23,7 +23,7 @@ namespace Broiler.Net.Sites;
 /// A web origin: a (scheme, canonical host, port) tuple, or an opaque origin that is same-origin only
 /// with itself. Ports are explicit, including the scheme default.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=A81584
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A81584
 // Broiler-Falsified-If: an Origin holds a host that TryGetHttpHost did not canonicalize, so https://A.example and https://a.example compare unequal
 // Broiler-Human:        PENDING
 public sealed class Origin : IEquatable<Origin>
@@ -73,7 +73,7 @@ public sealed class Origin : IEquatable<Origin>
     public bool Equals(Origin? other) => other is not null && (ReferenceEquals(this, other) ||
         !IsOpaque && !other.IsOpaque && Scheme == other.Scheme && Host == other.Host && Port == other.Port);
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=41A6C8
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=41A6C8
     // Broiler-Falsified-If: Equals(object) disagrees with Equals(Origin?) for the same Origin argument
     // Broiler-Human:        PENDING
     public override bool Equals(object? obj) => Equals(obj as Origin);

@@ -7,7 +7,7 @@
 // Annotated:        13/13
 // Exempt:           3
 // Human-reviewed:   0/13
-// IP risk:          Low
+// IP risk:          Medium
 // Security risk:    High
 // Criteria:         12/11
 // Resource impact:  2/10 max
@@ -24,13 +24,13 @@ namespace Broiler.Net.Http;
 /// Keeps localhost names and loopback addresses on the loopback interface, so <see cref="Sites.HostNames.IsSecure(Uri)"/>'s
 /// loopback rules hold on the wire: they never reach DNS or a proxy.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=284B7A
+// Broiler-AI:           Origin=AI; IP=Medium; Security=High; Resources=2; Fingerprint=284B7A
 // Broiler-Falsified-If: a request to a name under .localhost reaches DNS or the system proxy instead of a loopback address
 // Broiler-Human:        PENDING
 internal static class LoopbackRouting
 {
     /// <summary>RFC 8305's connection attempt delay: ::1 goes first, 127.0.0.1 joins if ::1 has not answered.</summary>
-    // Broiler-AI:           Origin=AI; Spec=RFC-8305 s5; IP=None; Security=Low; Resources=0; Fingerprint=5C2C1E
+    // Broiler-AI:           Origin=AI; Spec=RFC-8305 s5; IP=None; Security=None; Resources=0; Fingerprint=5C2C1E
     // Broiler-Human:        PENDING
     internal static readonly TimeSpan AttemptDelay = TimeSpan.FromMilliseconds(250);
 
@@ -92,7 +92,7 @@ internal static class LoopbackRouting
         attempt.ContinueWith(t => { if (!t.IsCompletedSuccessfully) _ = t.Exception; else if (t.Result != winner) t.Result.Dispose(); },
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=7734B3
+    // Broiler-AI:           Origin=AI; IP=Medium; Security=High; Resources=1; Fingerprint=7734B3
     // Broiler-Falsified-If: a connect that fails or is cancelled leaves its Socket undisposed
     // Broiler-Human:        PENDING
     private static async ValueTask<Stream> ConnectAsync(EndPoint endpoint, CancellationToken cancellationToken)

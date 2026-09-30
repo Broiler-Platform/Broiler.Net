@@ -9,7 +9,7 @@
 // Human-reviewed:   0/41
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         40/25
+// Criteria:         40/31
 // Resource impact:  7/10 max
 // Unverified:       41
 //
@@ -35,7 +35,7 @@ namespace Broiler.Net.Http;
 public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentCookieAccess, IDisposable
 {
     // Cookie, Host and Origin, plus the message framing and connection headers the session and handler control.
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=02CEF0
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=02CEF0
     // Broiler-Falsified-If: a caller-set Cookie, Host, Origin or Transfer-Encoding header reaches the wire in place of the value the session or handler writes
     // Broiler-Human:        PENDING
     private static readonly HashSet<string> OwnedHeaders = new(StringComparer.OrdinalIgnoreCase)
@@ -43,13 +43,13 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
         "Cookie", "Cookie2", "Host", "Origin", "Content-Length", "Transfer-Encoding", "Connection", "Keep-Alive", "TE",
         "Trailer", "Upgrade", "Expect",
     };
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=91A619
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=91A619
     // Broiler-Falsified-If: a Content-Language or Content-Encoding header survives a 303 redirect that turned a POST into a GET
     // Broiler-Human:        PENDING
     private static readonly HashSet<string> RequestBodyHeaders = new(StringComparer.OrdinalIgnoreCase)
         { "Content-Encoding", "Content-Language", "Content-Location", "Content-Type" };
     // Fetch "bad port".
-    // Broiler-AI:           Origin=AI; Spec=FETCH s2.9; IP=None; Security=High; Resources=0; Fingerprint=FE5CE8
+    // Broiler-AI:           Origin=AI; Spec=FETCH s2.9; IP=None; Security=High; Resources=1; Fingerprint=FE5CE8
     // Broiler-Falsified-If: a port on the Fetch bad port list, such as 25, 6697 or 10080, is missing from the set, so a request to it is sent
     // Broiler-Human:        PENDING
     private static readonly HashSet<int> BadPorts =
@@ -64,7 +64,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
     private readonly HttpMessageInvoker _invoker;
     private int _disposed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=BAB4B0
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=BAB4B0
     // Broiler-Falsified-If: options whose Sites differ from the supplied cookie store's resolver construct a session instead of throwing ArgumentException
     // Broiler-Human:        PENDING
     public BrowserNetworkSession(BrowserNetworkSessionOptions? options = null)
@@ -97,7 +97,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
     public ISiteResolver Sites { get; }
     public bool CookiesEnabled => _options.CookiesEnabled;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=5AA4DE
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=5AA4DE
     // Broiler-Falsified-If: a call made after Dispose, or with a null request or context, reaches SendCore instead of throwing before any work starts
     // Broiler-Human:        PENDING
     public Task<TransportResponse> SendAsync(HttpRequestMessage request, RequestContext context, CancellationToken cancellationToken = default)
@@ -106,7 +106,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
         return SendCore(request, context, async: true, cancellationToken).AsTask();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=7D34F0
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=7D34F0
     // Broiler-Falsified-If: the synchronous path awaits real asynchronous work, so GetResult is called on a ValueTask that has not completed
     // Broiler-Human:        PENDING
     public TransportResponse Send(HttpRequestMessage request, RequestContext context, CancellationToken cancellationToken = default)
@@ -120,17 +120,17 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
     /// <summary>The document.cookie view of the profile store, for script bindings.</summary>
     public DocumentCookieAccess DocumentCookies { get; }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=19158B
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=19158B
     // Broiler-Falsified-If: document.cookie read through the session differs from DocumentCookies.TryGetCookie for the same document
     // Broiler-Human:        PENDING
     public bool TryGetCookie(DocumentRequestContext document, out string cookie) => DocumentCookies.TryGetCookie(document, out cookie);
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=F52297
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=F52297
     // Broiler-Falsified-If: a document.cookie write through the session lands in a store other than Cookies, so the next request does not carry it
     // Broiler-Human:        PENDING
     public bool TrySetCookie(DocumentRequestContext document, string value) => DocumentCookies.TrySetCookie(document, value);
 
     /// <inheritdoc cref="DocumentCookieAccess.GetSiteForCookies"/>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=2; Fingerprint=923121
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=923121
     // Broiler-Falsified-If: it returns a site for cookies that differs from DocumentCookies.GetSiteForCookies for the same document
     // Broiler-Human:        PENDING
     public Origin GetSiteForCookies(DocumentRequestContext document) => DocumentCookies.GetSiteForCookies(document);
@@ -153,7 +153,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=5F9B73
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=5F9B73
     // Broiler-Falsified-If: a non-navigation request that names a Container, or omits its Client, passes without an InvalidRequest error
     // Broiler-Human:        PENDING
     private static void CheckContext(RequestContext context)
@@ -393,7 +393,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
         return message;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=B2D115
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=B2D115
     // Broiler-Falsified-If: a caller-set header value with a CR or LF between other characters is copied into the list instead of raising InvalidRequest
     // Broiler-Human:        PENDING
     private List<KeyValuePair<string, string>> GetAuthorHeaders(HttpRequestMessage request, RequestContext context)
@@ -494,7 +494,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
     private static IEnumerable<string> GetValues(HttpResponseMessage response, string name) =>
         response.Headers.NonValidated.TryGetValues(name, out var values) ? values : [];
 
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.2; IP=Low; Security=High; Resources=2; Fingerprint=962270
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.2; IP=Low; Security=High; Resources=5; Fingerprint=962270
     // Broiler-Falsified-If: a request whose redirect chain passes through a cross-site URL is given SameSite status, so Strict cookies go with it
     // Broiler-Human:        PENDING
     private SameSiteStatus GetSameSite(RequestContext context, Origin? containerSite, Origin? clientSite, List<Uri> urlList)
@@ -507,7 +507,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
         return sameSite ? SameSiteStatus.SameSite : SameSiteStatus.CrossSite;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=AC11E5
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=AC11E5
     // Broiler-Falsified-If: a request used by an iframe that is cross-site with its top-level document gets a partition key whose cross-site ancestor bit is false
     // Broiler-Human:        PENDING
     private CookiePartitionKey? GetPartitionKey(RequestContext context, DocumentRequestContext? holder, Origin? holderSite, Uri current)
@@ -519,7 +519,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
             ? new(top, holderSite.IsOpaque || !Sites.IsSameSite(Origin.FromUrl(current), holderSite)) : null;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=ABD447
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=ABD447
     // Broiler-Falsified-If: it returns an origin that differs from DocumentCookieAccess.TopLevelOrigin for the same document
     // Broiler-Human:        PENDING
     private static Origin TopLevelOrigin(DocumentRequestContext top) => DocumentCookieAccess.TopLevelOrigin(top);
@@ -558,7 +558,7 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
         url.HostNameType == UriHostNameType.Dns && HostNames.TryGetHttpHost(url, out var host) && HostNames.IsIp(host)
             ? new UriBuilder(url) { Host = host }.Uri : url;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=164793
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=164793
     // Broiler-Human:        PENDING
     private static TransportException Error(TransportError error, string message) => new(error, message);
 

@@ -23,7 +23,7 @@ namespace Broiler.Net.Http;
 /// (the source document). It is null only for browser-initiated navigations (address bar, bookmarks, history,
 /// UI reloads), which have no client.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=445DA9
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=445DA9
 // Broiler-Falsified-If: a RequestContext initialized with only Destination and Client is not no-cors with credentials include and redirect follow
 // Broiler-Human:        PENDING
 public sealed record RequestContext

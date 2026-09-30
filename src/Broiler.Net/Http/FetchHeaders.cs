@@ -9,7 +9,7 @@
 // Human-reviewed:   0/33
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         33/29
+// Criteria:         33/30
 // Resource impact:  5/10 max
 // Unverified:       33
 //
@@ -56,11 +56,11 @@ public static class FetchHeaders
     // Broiler-Human:        PENDING
     private static readonly HashSet<string> NoCorsUserAgentHeaders = new(StringComparer.OrdinalIgnoreCase)
         { "User-Agent", "Range", "Cache-Control", "Pragma" };
-    // Broiler-AI:           Origin=AI; Spec=FETCH s2.2.1; IP=None; Security=Low; Resources=1; Fingerprint=C8C07F
+    // Broiler-AI:           Origin=AI; Spec=FETCH s2.2.1; IP=None; Security=None; Resources=1; Fingerprint=C8C07F
     // Broiler-Falsified-If: a method other than DELETE, GET, HEAD, OPTIONS, POST and PUT is in the array, so NormalizeMethod upper-cases it
     // Broiler-Human:        PENDING
     private static readonly string[] StandardMethods = ["DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT"];
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=672C2C
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=672C2C
     // Broiler-Falsified-If: a character other than an ASCII digit or letter is in the string, widening both the token and the language character sets
     // Broiler-Human:        PENDING
     private const string Alphanumeric = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -72,7 +72,7 @@ public static class FetchHeaders
     // Broiler-Falsified-If: a character outside digits, letters, space and the marks *,-.;= such as a double quote is in the set, so an Accept-Language value carrying it skips the preflight
     // Broiler-Human:        PENDING
     private static readonly SearchValues<char> LanguageChars = SearchValues.Create(" *,-.;=" + Alphanumeric);
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=5F478C
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=5F478C
     // Broiler-Falsified-If: the string holds anything other than space, tab, CR and LF, so NormalizeHeaderValue strips a character that belongs to the value
     // Broiler-Human:        PENDING
     private const string HttpWhitespace = " \t\r\n";

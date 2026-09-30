@@ -9,7 +9,7 @@
 // Human-reviewed:   0/30
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         27/20
+// Criteria:         28/22
 // Resource impact:  5/10 max
 // Unverified:       30
 //
@@ -52,7 +52,7 @@ public sealed class CookieStore : ICookieService
     // Broiler-Human:        PENDING
     public event EventHandler<CookieChangeBatch>? Changed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=9E8256
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=9E8256
     // Broiler-Falsified-If: a CookieStoreOptions with a zero or negative quota is accepted and the store is constructed
     // Broiler-Human:        PENDING
     public CookieStore(CookiePolicy? policy = null, TimeProvider? clock = null, CookieStoreOptions? options = null)
@@ -72,7 +72,7 @@ public sealed class CookieStore : ICookieService
     // Broiler-Human:        PENDING
     public long Revision { get { lock (_sync) return _revision; } }
 
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=High; Resources=4; Fingerprint=D1C390
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=High; Resources=5; Fingerprint=D1C390
     // Broiler-Falsified-If: a Set-Cookie field reaches the store without CookiePolicy.Accept running against this request's URL and same-site status
     // Broiler-Human:        PENDING
     public CookieResult ReceiveResponseCookie(string header, CookieRequestContext context)
@@ -88,7 +88,7 @@ public sealed class CookieStore : ICookieService
     /// Each supplied string is one field value; commas are preserved. Every field is processed before
     /// observer failures are thrown as one <see cref="CookieObserverException"/>.
     /// </summary>
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=High; Resources=4; Fingerprint=8E3D73
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=High; Resources=5; Fingerprint=8E3D73
     // Broiler-Falsified-If: a failing Changed observer on one field stops a later field in the same call from being stored
     // Broiler-Human:        PENDING
     public IReadOnlyList<CookieResult> ReceiveResponseCookies(IEnumerable<string> headers, CookieRequestContext context)
@@ -102,7 +102,7 @@ public sealed class CookieStore : ICookieService
         return results.AsReadOnly();
     }
 
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.2; IP=Low; Security=High; Resources=4; Fingerprint=5E3101
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.2; IP=Low; Security=High; Resources=5; Fingerprint=5E3101
     // Broiler-Falsified-If: a script assignment is stored with document set to false, so it can create or overwrite an HttpOnly cookie
     // Broiler-Human:        PENDING
     public CookieResult SetDocumentCookie(string assignment, CookieDocumentContext context)
@@ -118,7 +118,7 @@ public sealed class CookieStore : ICookieService
         return result;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=B3B001
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=B3B001
     // Broiler-Falsified-If: a response field reaches Receive without passing through CookieParser.Parse, or flagged as a document assignment
     // Broiler-Human:        PENDING
     private CookieResult ReceiveField(string header, CookieRequestContext context, ref List<Exception>? errors) =>
@@ -178,7 +178,7 @@ public sealed class CookieStore : ICookieService
         }
     }
 
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.3; IP=None; Security=High; Resources=4; Fingerprint=5109F7
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.3; IP=None; Security=High; Resources=5; Fingerprint=5109F7
     // Broiler-Falsified-If: the header for a request carries a cookie that CookiePolicy.CanRetrieve rejects for that request's context
     // Broiler-Human:        PENDING
     public string BuildRequestHeader(CookieRequestContext context)
@@ -187,7 +187,7 @@ public sealed class CookieStore : ICookieService
         return Retrieve(context, document: false);
     }
 
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.2; IP=Low; Security=High; Resources=4; Fingerprint=1741FE
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.2; IP=Low; Security=High; Resources=5; Fingerprint=1741FE
     // Broiler-Falsified-If: an HttpOnly cookie that matches the document URL appears in the returned string
     // Broiler-Human:        PENDING
     public string GetDocumentCookies(CookieDocumentContext context)
@@ -198,7 +198,7 @@ public sealed class CookieStore : ICookieService
     }
 
     // Reads skip expired records without removing them, so they never publish or throw observer errors.
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.3; IP=Low; Security=High; Resources=4; Fingerprint=23A798
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8.3; IP=Low; Security=High; Resources=5; Fingerprint=23A798
     // Broiler-Falsified-If: a record whose Expires is at or before the read's clock reading is included in the returned header
     // Broiler-Human:        PENDING
     private string Retrieve(CookieRequestContext context, bool document)
@@ -241,7 +241,8 @@ public sealed class CookieStore : ICookieService
     }
 
     /// <summary>Privileged immutable snapshot for host administration; includes HttpOnly values.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=4; Fingerprint=18A15A
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=18A15A
+    // Broiler-Falsified-If: Snapshot() leaves out a live cookie, HttpOnly ones included, that Snapshot(out long) returns for the same store state
     // Broiler-Human:        PENDING
     public IReadOnlyList<CookieRecord> Snapshot() => Snapshot(out _);
 
@@ -298,12 +299,12 @@ public sealed class CookieStore : ICookieService
         return changes.Count;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=AC3BC5
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=AC3BC5
     // Broiler-Falsified-If: a persistent cookie whose Expires equals the current instant is treated as live
     // Broiler-Human:        PENDING
     private static bool Live(CookieRecord cookie, DateTimeOffset now) => cookie.Expires is not { } expires || expires > now;
 
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=High; Resources=4; Fingerprint=6F6BCA
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=Medium; Resources=4; Fingerprint=6F6BCA
     // Broiler-Falsified-If: after a purge, _nextExpiry is later than the earliest Expires among the remaining records, so a later mutation leaves an expired record in place
     // Broiler-Human:        PENDING
     private void PurgeExpired(DateTimeOffset now, List<CookieChange> changes)
@@ -355,7 +356,7 @@ public sealed class CookieStore : ICookieService
         return victim!;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=890D91
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=890D91
     // Broiler-Falsified-If: two cookies in the same partition whose domains share a registrable domain are charged to different site buckets
     // Broiler-Human:        PENDING
     private Entry Add(CookieRecord cookie)
@@ -431,7 +432,7 @@ public sealed class CookieStore : ICookieService
         if (errors is not null) throw new CookieObserverException(errors);
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=AD4675
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=AD4675
     // Broiler-Falsified-If: two keys with the same Site and different Partition values compare equal
     // Broiler-Human:        PENDING
     private readonly record struct BucketKey(string Site, CookiePartitionKey? Partition);

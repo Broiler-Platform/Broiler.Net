@@ -56,19 +56,19 @@ public readonly record struct CookieParseResult(ParsedCookie? Cookie, CookieDeci
 // Broiler-Human:        PENDING
 public static partial class CookieParser
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0B4C5A
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=0B4C5A
     // Broiler-Falsified-If: a Set-Cookie field of 65537 octets is parsed instead of rejected with RejectedSize
     // Broiler-Human:        PENDING
     public const int MaximumFieldBytes = 65536;
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.6; IP=None; Security=Low; Resources=0; Fingerprint=786AB4
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.6; IP=None; Security=None; Resources=0; Fingerprint=786AB4
     // Broiler-Falsified-If: a cookie whose name and value total 4097 octets is parsed instead of rejected with RejectedSize
     // Broiler-Human:        PENDING
     public const int MaximumNameValueBytes = 4096;
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.6; IP=None; Security=Low; Resources=0; Fingerprint=97AD9B
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.6; IP=None; Security=None; Resources=0; Fingerprint=97AD9B
     // Broiler-Falsified-If: an attribute value of 1025 octets, such as a long Path, is applied to the cookie instead of ignored
     // Broiler-Human:        PENDING
     public const int MaximumAttributeValueBytes = 1024;
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.5; IP=None; Security=Low; Resources=0; Fingerprint=613B35
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.5; IP=None; Security=None; Resources=0; Fingerprint=613B35
     // Broiler-Falsified-If: an Expires or Max-Age more than 400 days after the parse time is kept without being clamped
     // Broiler-Human:        PENDING
     public static readonly TimeSpan MaximumLifetime = TimeSpan.FromDays(400);
@@ -208,7 +208,7 @@ public static partial class CookieParser
     // Broiler-Falsified-If: a digit group captured by the date regexes makes Number throw, so TryParseDate raises an exception instead of returning false
     // Broiler-Human:        PENDING
     private static int Number(string text) => int.Parse(text, CultureInfo.InvariantCulture);
-    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.1.1; IP=None; Security=None; Resources=0; Fingerprint=C362EA
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.1.1; IP=None; Security=None; Resources=1; Fingerprint=C362EA
     // Broiler-Falsified-If: a month token such as sep or SEPT resolves to a month other than 9
     // Broiler-Human:        PENDING
     private static readonly string[] Months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
