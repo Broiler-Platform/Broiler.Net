@@ -1,13 +1,39 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   10
+// Annotated:        10/10
+// Exempt:           1
+// Human-reviewed:   0/10
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         9/8
+// Resource impact:  3/10 max
+// Unverified:       10
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using Broiler.Net.Sites;
 
 namespace Broiler.Net.Cookies;
 
 /// <summary>Pure acceptance and retrieval rules; browser context derivation is the host's job.</summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=BCBB23
+// Broiler-Falsified-If: a cookie accepted from sub.example.com without a Domain attribute is returned for a request to example.com
+// Broiler-Human:        PENDING
 public sealed class CookiePolicy
 {
     public ISiteResolver Sites { get; }
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=3; Fingerprint=9295F7
+    // Broiler-Falsified-If: a policy constructed without a resolver accepts a Domain attribute of co.uk from www.example.co.uk
+    // Broiler-Human:        PENDING
     public CookiePolicy(ISiteResolver? sites = null) => Sites = sites ?? SiteResolver.Default;
 
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.7; IP=Low; Security=High; Resources=3; Fingerprint=CF7D1A
+    // Broiler-Falsified-If: a Set-Cookie received from a.example.com with a Domain attribute of b.example.com produces a key instead of RejectedDomain
+    // Broiler-Human:        PENDING
     internal CookieDecision? Accept(ParsedCookie parsed, CookieRequestContext context, bool document, out CookieKey? key)
     {
         key = null;
@@ -55,8 +81,13 @@ public sealed class CookiePolicy
     }
 
     /// <summary>Request facts derived once per retrieval, not once per cookie.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=37F043
+    // Broiler-Human:        PENDING
     internal readonly record struct RetrievalScope(string Host, bool Secure, string Path, CookieRequestContext Context, bool Document, bool LaxAllowed);
 
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8; IP=Low; Security=High; Resources=3; Fingerprint=FFEAA3
+    // Broiler-Falsified-If: a cross-site top-level POST navigation yields a scope that lets Lax cookies through
+    // Broiler-Human:        PENDING
     internal static bool TryBeginRetrieval(CookieRequestContext context, bool document, out RetrievalScope scope)
     {
         scope = default;
@@ -67,6 +98,9 @@ public sealed class CookiePolicy
     }
 
     /// <summary><paramref name="publicSuffix"/> caches the public-suffix test for the cookie's Domain.</summary>
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.8; IP=Low; Security=High; Resources=2; Fingerprint=C82973
+    // Broiler-Falsified-If: a SameSite Strict cookie is returned for a cross-site top-level GET navigation
+    // Broiler-Human:        PENDING
     internal bool CanRetrieve(CookieRecord cookie, in RetrievalScope scope, ref bool? publicSuffix)
     {
         if (cookie.HostOnly ? scope.Host != cookie.Domain :
@@ -82,11 +116,20 @@ public sealed class CookiePolicy
     }
 
     // Fetch normalizes the six standard methods to upper case; any other method keeps its case.
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=91C767
+    // Broiler-Falsified-If: the method POST, in any letter case, is classed as safe, so Lax cookies ride a cross-site top-level form submission
+    // Broiler-Human:        PENDING
     private static bool IsSafeMethod(string? method) => method is "TRACE" ||
         method is not null && (method.Equals("GET", StringComparison.OrdinalIgnoreCase) ||
             method.Equals("HEAD", StringComparison.OrdinalIgnoreCase) || method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase));
 
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.4; IP=None; Security=High; Resources=0; Fingerprint=495678
+    // Broiler-Falsified-If: a cookie named __host-id in lower case is stored with a Domain attribute because the prefix comparison is case-sensitive
+    // Broiler-Human:        PENDING
     private static bool Prefix(string value, string prefix) => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.1.4; IP=Low; Security=High; Resources=3; Fingerprint=267F8A
+    // Broiler-Falsified-If: a cookie without a Path set by a response for /docs/page gets a default path other than /docs
+    // Broiler-Human:        PENDING
     public static string DefaultPath(Uri url)
     {
         var path = url.AbsolutePath;
@@ -94,6 +137,9 @@ public sealed class CookiePolicy
         return slash <= 0 ? "/" : path[..slash];
     }
 
+    // Broiler-AI:           Origin=AI; Spec=RFC-6265bis s5.1.4; IP=Low; Security=High; Resources=2; Fingerprint=42CA58
+    // Broiler-Falsified-If: a cookie path of /foo matches the request path /foobar
+    // Broiler-Human:        PENDING
     public static bool PathMatches(string requestPath, string cookiePath) =>
         requestPath == cookiePath || (requestPath.StartsWith(cookiePath, StringComparison.Ordinal) &&
             (cookiePath.EndsWith('/') || (requestPath.Length > cookiePath.Length && requestPath[cookiePath.Length] == '/')));
