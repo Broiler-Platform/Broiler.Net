@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Broiler.Net</PackageId>
-    <Description>Dependency-neutral networking for Broiler hosts: an RFC 6265bis cookie engine with CHIPS partitioning, Public Suffix List site resolution, and a policy-aware HTTP transport.</Description>
+    <Description>Dependency-neutral networking for Broiler hosts: an RFC 6265bis cookie engine with CHIPS partitioning, Public Suffix List site resolution, a policy-aware HTTP transport, and MIME type and data: URL parsing.</Description>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Broiler.Net.Tests" />

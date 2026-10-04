@@ -13,15 +13,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 18 |
+| Files scanned | 21 |
 | Files not covered | 0 |
-| Files carrying an annotation | 18 |
-| Code units | 433 |
-| Relevant | 270 |
-| Exempt by predicate | 163 |
-| Annotated | 270 of 270 (100%) |
-| Human reviewed | 0 of 270 (0%) |
-| Unverified | 270 |
+| Files carrying an annotation | 21 |
+| Code units | 469 |
+| Relevant | 297 |
+| Exempt by predicate | 172 |
+| Annotated | 297 of 297 (100%) |
+| Human reviewed | 0 of 297 (0%) |
+| Unverified | 297 |
 
 ## Review states
 
@@ -29,18 +29,18 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 270 |
+| HUMAN_PENDING | 297 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 163 |
+| EXEMPT | 172 |
 
 ## IP risk
 
 | Value | Units |
 |---|---:|
-| None | 108 |
-| Low | 160 |
+| None | 121 |
+| Low | 174 |
 | Medium | 2 |
 | High | 0 |
 | Unknown | 0 |
@@ -51,9 +51,9 @@ and the figures below are the measurement of how far from that claim the per-uni
 | Value | Units |
 |---|---:|
 | None | 30 |
-| Low | 38 |
-| Medium | 17 |
-| High | 185 |
+| Low | 39 |
+| Medium | 18 |
+| High | 210 |
 | Critical | 0 |
 | *not annotated* | 0 |
 
@@ -63,7 +63,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | Maximum | 7 / 10 |
 | Average over annotated units | 1.9 / 10 |
-| Units scored | 270 |
+| Units scored | 297 |
 
 ## High-security review areas
 
@@ -147,6 +147,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Http.BrowserNetworkSession.WithCanonicalHost(Uri)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.CreateHandler(BrowserNetworkSessionOptions)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.BrowserNetworkSession.CreateSocketsHandler(BrowserNetworkSessionOptions, bool)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.TextPlainUsAscii` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.TryParse(string?, out DataUrl?)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.DecodeUtf8()` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.TryFindBase64Marker(string, out int)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.PrepareAsUrlParserWould(string)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.PercentEncodeAsUrlParserWould(string)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.PercentDecode(string)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.DataUrl.HexValue(byte)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.DocumentCookieAccess` in `src/Broiler.Net/Http/DocumentCookieAccess.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.DocumentCookieAccess.TryGetCookie(DocumentRequestContext, out string)` in `src/Broiler.Net/Http/DocumentCookieAccess.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.DocumentCookieAccess.TrySetCookie(DocumentRequestContext, string)` in `src/Broiler.Net/Http/DocumentCookieAccess.cs` - Security=High, human line PENDING
@@ -185,9 +194,10 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Http.FetchHeaders.GetDecodeSplit(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.AppendQuotedString(string, ref int, StringBuilder)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.HasCorsUnsafeByte(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
-- `Broiler.Net.Http.FetchHeaders.GetMimeEssence(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.IsSafelistedRange(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.FetchHeaders.CompareDecimal(ReadOnlySpan<char>, ReadOnlySpan<char>)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.ForgivingBase64` in `src/Broiler.Net/Http/ForgivingBase64.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.ForgivingBase64.TryDecode(ReadOnlySpan<char>, out byte[]?)` in `src/Broiler.Net/Http/ForgivingBase64.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.LoopbackRouting` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.LoopbackRouting.IsLocalhost(string)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.LoopbackRouting.ConnectAsync(SocketsHttpConnectionContext, CancellationToken)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, human line PENDING
@@ -199,6 +209,21 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Net.Http.LoopbackRouting.RoutingHandler.SendAsync(HttpRequestMessage, CancellationToken)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.LoopbackRouting.RoutingHandler.Send(HttpRequestMessage, CancellationToken)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.LoopbackRouting.RoutingHandler.Route(HttpRequestMessage)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.HttpWhitespace` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.HttpTokenCodePoints` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.JavaScriptEssences` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsImage` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsHtml` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsXml` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsJson` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsJavaScript` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsJavaScriptEssenceMatch(string?)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.TryParse(string?, out MimeType?)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.ToString()` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.Serialize()` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.CollectQuotedStringValue(ReadOnlySpan<char>, ref int)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
+- `Broiler.Net.Http.MimeType.IsQuotedStringTokenText(string)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.RequestContext` in `src/Broiler.Net/Http/RequestContext.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.RequestContext.IsNavigation` in `src/Broiler.Net/Http/RequestContext.cs` - Security=High, human line PENDING
 - `Broiler.Net.Http.RequestContext.IsTopLevelNavigation` in `src/Broiler.Net/Http/RequestContext.cs` - Security=High, human line PENDING
@@ -257,8 +282,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 237 |
-| Units required to carry one | 185 |
+| Units carrying a criterion | 262 |
+| Units required to carry one | 210 |
 | Required and missing | 0 |
 
 A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make
@@ -278,13 +303,13 @@ that the rule is reviewable in one place rather than in several hundred.
 
 | Case | Units |
 |---|---:|
-| TrivialPropertyOrAccessor | 36 |
-| ParameterAssigningConstructor | 1 |
+| TrivialPropertyOrAccessor | 42 |
+| ParameterAssigningConstructor | 2 |
 | TrivialExpressionBodiedMember | 2 |
 | CompilerSuppliedRecordOrEnumMember | 44 |
 | DelegatingOverrideOrOperator | 0 |
 | InsideAssemblyMarker | 0 |
-| FieldDeclaringStorage | 18 |
+| FieldDeclaringStorage | 20 |
 | EnumMemberOfADeclaredVocabulary | 62 |
 | DeclaredInSource | 0 |
 
@@ -309,14 +334,14 @@ through a `<Compile Include>` it states, is left out of the record.
 ## Change detection
 
 `assurance.manifest.json` lists **every** code unit in the covered assembly -
-433 of them, exempt and relevant alike - with the fingerprint of its declaration.
+469 of them, exempt and relevant alike - with the fingerprint of its declaration.
 This manifest is a change-detection record, not a review. A unit listed there is watched, not reviewed:
 the entry records what the declaration's tokens hashed to when the generator last ran, and
 nothing else. What the manifest adds is that a unit the exemption predicate treats as
 trivial is no longer invisible: a semantic change to one moves a value in a generated file
 the check compares byte for byte. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Net` holds the manifest to the tree.
 
-Beside the units it lists **every covered file** - 18 of them - with a
+Beside the units it lists **every covered file** - 21 of them - with a
 fingerprint over the complete token stream of its compilation unit. A unit entry exists only
 for a declaration kind the scanner enumerates, and an enumeration is a whitelist: an
 `[assembly: ...]` attribute is a member of nothing and can be in no unit at all.

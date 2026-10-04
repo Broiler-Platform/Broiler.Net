@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   33
-// Annotated:        33/33
+// Relevant units:   32
+// Annotated:        32/32
 // Exempt:           0
-// Human-reviewed:   0/33
+// Human-reviewed:   0/32
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         33/30
+// Criteria:         32/29
 // Resource impact:  5/10 max
-// Unverified:       33
+// Unverified:       32
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -182,7 +182,7 @@ public static class FetchHeaders
     }
 
     /// <summary>Fetch "CORS-safelisted request-header" for one name/value pair.</summary>
-    // Broiler-AI:           Origin=AI; Spec=FETCH s2.2.2; IP=Low; Security=High; Resources=3; Fingerprint=6D0E5D
+    // Broiler-AI:           Origin=AI; Spec=FETCH s2.2.2; IP=Low; Security=High; Resources=3; Fingerprint=1D24E1
     // Broiler-Falsified-If: a Content-Type of application/json is reported CORS-safelisted
     // Broiler-Human:        PENDING
     public static bool IsCorsSafelistedRequestHeader(string name, string value)
@@ -194,8 +194,8 @@ public static class FetchHeaders
         {
             "accept" => !HasCorsUnsafeByte(value),
             "accept-language" or "content-language" => !value.AsSpan().ContainsAnyExcept(LanguageChars),
-            "content-type" => !HasCorsUnsafeByte(value) &&
-                GetMimeEssence(value) is "application/x-www-form-urlencoded" or "multipart/form-data" or "text/plain",
+            "content-type" => !HasCorsUnsafeByte(value) && MimeType.TryParse(value, out var mimeType) &&
+                mimeType.Essence is "application/x-www-form-urlencoded" or "multipart/form-data" or "text/plain",
             "range" => IsSafelistedRange(value),
             _ => false,
         };
@@ -341,23 +341,6 @@ public static class FetchHeaders
             if (c is (< ' ' and not '\t') or '"' or '(' or ')' or ':' or '<' or '>' or '?' or '@' or '[' or '\\' or ']' or '{' or '}' or '\x7F' or > '\xFF')
                 return true;
         return false;
-    }
-
-    // MIME Sniffing "parse a MIME type", reduced to the essence; parameters never make parsing fail.
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C611B7
-    // Broiler-Falsified-If: 'text/plain/x' is reduced to the essence text/plain
-    // Broiler-Human:        PENDING
-    private static string? GetMimeEssence(string value)
-    {
-        var input = value.AsSpan().Trim(HttpWhitespace);
-        var slash = input.IndexOf('/');
-        if (slash <= 0) return null;
-        var type = input[..slash];
-        var rest = input[(slash + 1)..];
-        var semicolon = rest.IndexOf(';');
-        var subtype = (semicolon < 0 ? rest : rest[..semicolon]).TrimEnd(HttpWhitespace);
-        if (type.ContainsAnyExcept(TokenChars) || subtype.IsEmpty || subtype.ContainsAnyExcept(TokenChars)) return null;
-        return string.Concat(type, "/", subtype).ToLowerInvariant();
     }
 
     // Fetch "parse a single range header value" without whitespace; suffix ranges (bytes=-N) are not safelisted.
