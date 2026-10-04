@@ -5,7 +5,7 @@ GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `CODE-ASSURANCE.md`, `assurance.manifest.json` and every generated source header from the
 product tree.
 
-> **Status: PENDING.** Human-reviewed: 0 of 270 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Net --release`
+> **Status: PENDING.** Human-reviewed: 0 of 297 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Net --release`
 > fails while any relevant unit is without a decision bound to its current fingerprint.
 
 ## 1. How To Use This File
@@ -49,13 +49,13 @@ did, which is the narrower and the more useful of the two.
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 18 |
-| Code units | 433 |
-| Relevant | 270 |
-| Exempt | 163 |
-| Assessed | 270 of 270 (100%) |
-| Human reviewed | 0 of 270 (0%) |
-| Unverified | 270 |
+| Files scanned | 21 |
+| Code units | 469 |
+| Relevant | 297 |
+| Exempt | 172 |
+| Assessed | 297 of 297 (100%) |
+| Human reviewed | 0 of 297 (0%) |
+| Unverified | 297 |
 | Aliases naming a decision | 0 |
 
 ## 4. Review States
@@ -67,11 +67,11 @@ annotations and the current fingerprints; nothing stores them.
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 270 |
+| HUMAN_PENDING | 297 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 163 |
+| EXEMPT | 172 |
 
 ## 5. Aliases In The Tree
 
@@ -92,10 +92,13 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Net/Cookies/CookieTypes.cs` | 68 | 23 | 45 | 23 | Low | High | 13/8 |
 | `src/Broiler.Net/Http/BroilerUserAgent.cs` | 8 | 8 | 0 | 8 | Low | Low | 8/0 |
 | `src/Broiler.Net/Http/BrowserNetworkSession.cs` | 48 | 41 | 7 | 41 | Low | High | 40/31 |
+| `src/Broiler.Net/Http/DataUrl.cs` | 13 | 9 | 4 | 9 | Low | High | 9/9 |
 | `src/Broiler.Net/Http/DocumentCookieAccess.cs` | 11 | 7 | 4 | 7 | Low | High | 6/6 |
 | `src/Broiler.Net/Http/DocumentRequestContext.cs` | 11 | 8 | 3 | 8 | Low | High | 7/5 |
-| `src/Broiler.Net/Http/FetchHeaders.cs` | 33 | 33 | 0 | 33 | Low | High | 33/30 |
+| `src/Broiler.Net/Http/FetchHeaders.cs` | 32 | 32 | 0 | 32 | Low | High | 32/29 |
+| `src/Broiler.Net/Http/ForgivingBase64.cs` | 2 | 2 | 0 | 2 | Low | High | 2/2 |
 | `src/Broiler.Net/Http/LoopbackRouting.cs` | 16 | 13 | 3 | 13 | Medium | High | 12/11 |
+| `src/Broiler.Net/Http/MimeType.cs` | 22 | 17 | 5 | 17 | Low | High | 15/15 |
 | `src/Broiler.Net/Http/RequestContext.cs` | 18 | 8 | 10 | 8 | Low | High | 8/7 |
 | `src/Broiler.Net/Http/RequestTypes.cs` | 43 | 9 | 34 | 9 | Low | High | 2/2 |
 | `src/Broiler.Net/Http/Transport.cs` | 22 | 9 | 13 | 9 | Low | High | 7/6 |
@@ -279,6 +282,24 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: the direct and proxied handlers are passed in swapped order, so loopback traffic goes through the system proxy
 - `Broiler.Net.Http.BrowserNetworkSession.CreateSocketsHandler(BrowserNetworkSessionOptions, bool)` in `src/Broiler.Net/Http/BrowserNetworkSession.cs` - Security=High, Spec=none cited, `C473CC`, PENDING
   - Falsified if: a handler built here follows redirects or sends stored cookies on its own, so a hop skips the session's CORS and cookie rules
+- `Broiler.Net.Http.DataUrl` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=FETCH s6, `70C4C9`, PENDING
+  - Falsified if: data:;base64,YQ, whose base64 body has no padding, is not decoded to the single byte 0x61 a browser reads from it
+- `Broiler.Net.Http.DataUrl.TextPlainUsAscii` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=FETCH s6, `0A2E8A`, PENDING
+  - Falsified if: the fallback serializes as anything but text/plain;charset=US-ASCII, so data:,X declares another type than the Fetch standard gives it
+- `Broiler.Net.Http.DataUrl.TryParse(string?, out DataUrl?)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=FETCH s6, `1E6710`, PENDING
+  - Falsified if: a body is base64-decoded although ;base64 is not the last parameter, as in data:x/x;base64;charset=x,WA
+- `Broiler.Net.Http.DataUrl.DecodeUtf8()` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=ENCODING s6, `6EB242`, PENDING
+  - Falsified if: a body that starts with the UTF-8 byte order mark decodes to text that still starts with U+FEFF
+- `Broiler.Net.Http.DataUrl.TryFindBase64Marker(string, out int)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=FETCH s6, `77AF28`, PENDING
+  - Falsified if: a tab between the semicolon and base64 is taken for the base64 marker, where only spaces may stand there
+- `Broiler.Net.Http.DataUrl.PrepareAsUrlParserWould(string)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=none cited, `B41641`, PENDING
+  - Falsified if: a literal tab or newline inside a data: URL survives into the decoded body, where the URL parser removes it
+- `Broiler.Net.Http.DataUrl.PercentEncodeAsUrlParserWould(string)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=none cited, `8DEDF7`, PENDING
+  - Falsified if: a form feed ending the declared type leaves it text/plain, where the URL parser's percent-encoding makes it text/plain%0c
+- `Broiler.Net.Http.DataUrl.PercentDecode(string)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=URL s1.3, `F92E9B`, PENDING
+  - Falsified if: a percent sign followed by a single hex digit at the end of the body, as in data:,%4, is dropped or decoded instead of kept as written
+- `Broiler.Net.Http.DataUrl.HexValue(byte)` in `src/Broiler.Net/Http/DataUrl.cs` - Security=High, Spec=URL s1.3, `7C6F3A`, PENDING
+  - Falsified if: a byte outside 0-9, a-f and A-F, such as G, is given a value, so %4G is percent-decoded
 - `Broiler.Net.Http.DocumentCookieAccess` in `src/Broiler.Net/Http/DocumentCookieAccess.cs` - Security=High, Spec=none cited, `E3E68C`, PENDING
   - Falsified if: script in an iframe that is cross-site with its top-level document reads a SameSite Strict or Lax cookie through document.cookie
 - `Broiler.Net.Http.DocumentCookieAccess.TryGetCookie(DocumentRequestContext, out string)` in `src/Broiler.Net/Http/DocumentCookieAccess.cs` - Security=High, Spec=none cited, `FD08EB`, PENDING
@@ -337,7 +358,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: the method 'track' in lower case is not reported forbidden
 - `Broiler.Net.Http.FetchHeaders.IsCorsSafelistedMethod(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.1, `1A2CA8`, PENDING
   - Falsified if: a lower-case 'post' is reported CORS-safelisted
-- `Broiler.Net.Http.FetchHeaders.IsCorsSafelistedRequestHeader(string, string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.2, `6D0E5D`, PENDING
+- `Broiler.Net.Http.FetchHeaders.IsCorsSafelistedRequestHeader(string, string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.2, `1D24E1`, PENDING
   - Falsified if: a Content-Type of application/json is reported CORS-safelisted
 - `Broiler.Net.Http.FetchHeaders.FilterResponseHeaders(IReadOnlyList<KeyValuePair<string, string>>, ResponseTainting, bool)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.6, `A2891A`, PENDING
   - Falsified if: a credentialed CORS response whose Access-Control-Expose-Headers is '*' exposes a non-safelisted header to script
@@ -355,12 +376,14 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: an unterminated quoted string that ends in a backslash throws or is read past the end of the input
 - `Broiler.Net.Http.FetchHeaders.HasCorsUnsafeByte(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.2, `4D94DF`, PENDING
   - Falsified if: a value containing 0x7F is reported free of CORS-unsafe request-header bytes
-- `Broiler.Net.Http.FetchHeaders.GetMimeEssence(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=none cited, `C611B7`, PENDING
-  - Falsified if: 'text/plain/x' is reduced to the essence text/plain
 - `Broiler.Net.Http.FetchHeaders.IsSafelistedRange(string)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=FETCH s2.2.2, `FC37EF`, PENDING
   - Falsified if: a range whose first position exceeds its last, such as bytes=10-9, is reported safelisted
 - `Broiler.Net.Http.FetchHeaders.CompareDecimal(ReadOnlySpan<char>, ReadOnlySpan<char>)` in `src/Broiler.Net/Http/FetchHeaders.cs` - Security=High, Spec=none cited, `40BFF3`, PENDING
   - Falsified if: '010' compares as smaller than '9'
+- `Broiler.Net.Http.ForgivingBase64` in `src/Broiler.Net/Http/ForgivingBase64.cs` - Security=High, Spec=INFRA s7, `513410`, PENDING
+  - Falsified if: YQ fails to decode, where a browser decodes it to the single byte 0x61
+- `Broiler.Net.Http.ForgivingBase64.TryDecode(ReadOnlySpan<char>, out byte[]?)` in `src/Broiler.Net/Http/ForgivingBase64.cs` - Security=High, Spec=INFRA s7, `02EADB`, PENDING
+  - Falsified if: input holding a vertical tab or a no-break space decodes instead of failing
 - `Broiler.Net.Http.LoopbackRouting` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, Spec=none cited, `284B7A`, PENDING
   - Falsified if: a request to a name under .localhost reaches DNS or the system proxy instead of a loopback address
 - `Broiler.Net.Http.LoopbackRouting.IsLocalhost(string)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, Spec=none cited, `8C74B6`, PENDING
@@ -383,6 +406,36 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a synchronous request to http://localhost/ is sent through the proxy-using invoker
 - `Broiler.Net.Http.LoopbackRouting.RoutingHandler.Route(HttpRequestMessage)` in `src/Broiler.Net/Http/LoopbackRouting.cs` - Security=High, Spec=none cited, `9003C7`, PENDING
   - Falsified if: a request to http://[::1]:8080/ is given the proxy-using invoker
+- `Broiler.Net.Http.MimeType` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.4, `3E1EB0`, PENDING
+  - Falsified if: a parameter name holding the Kelvin sign, which .NET lowercases to k, is kept as the parameter key
+- `Broiler.Net.Http.MimeType.HttpWhitespace` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=FETCH s2.2, `3F35BE`, PENDING
+  - Falsified if: the string holds a character other than tab, line feed, carriage return and space, such as a form feed, so a type padded with it parses
+- `Broiler.Net.Http.MimeType.HttpTokenCodePoints` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s3, `F79DD0`, PENDING
+  - Falsified if: a character outside the HTTP token code points, such as a colon, a slash or a space, is in the set, so a type or subtype carrying it parses
+- `Broiler.Net.Http.MimeType.JavaScriptEssences` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `3A2CFD`, PENDING
+  - Falsified if: an essence the standard does not list, such as text/javascript1.6, is in the array, so a response of that type counts as script
+- `Broiler.Net.Http.MimeType.IsImage` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `7206AF`, PENDING
+  - Falsified if: image/svg+xml is not reported an image MIME type, or imagex/png is
+- `Broiler.Net.Http.MimeType.IsHtml` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `B9429B`, PENDING
+  - Falsified if: text/html;charset=utf-8 is not reported an HTML MIME type, or application/xhtml+xml is
+- `Broiler.Net.Http.MimeType.IsXml` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `5E58A7`, PENDING
+  - Falsified if: application/xhtml+xml is not reported an XML MIME type, or application/xml-dtd is
+- `Broiler.Net.Http.MimeType.IsJson` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `518FD9`, PENDING
+  - Falsified if: application/ld+json is not reported a JSON MIME type, or application/jsonp is
+- `Broiler.Net.Http.MimeType.IsJavaScript` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `2EA5BD`, PENDING
+  - Falsified if: text/javascript;charset=utf-8 is not reported a JavaScript MIME type because of its parameter
+- `Broiler.Net.Http.MimeType.IsJavaScriptEssenceMatch(string?)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.6, `347BFA`, PENDING
+  - Falsified if: a string that matches an essence only under Unicode case folding, such as text/ecmascript spelled with a long s, is reported a match
+- `Broiler.Net.Http.MimeType.TryParse(string?, out MimeType?)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.4, `923060`, PENDING
+  - Falsified if: a repeated parameter, as in text/html;charset=utf-8;charset=x, keeps the later value instead of the first
+- `Broiler.Net.Http.MimeType.ToString()` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.5, `239C03`, PENDING
+  - Falsified if: two calls on one instance return different strings, or a serialization does not parse back to the same type
+- `Broiler.Net.Http.MimeType.Serialize()` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s4.5, `A5B26C`, PENDING
+  - Falsified if: a parameter value holding a double quote or a backslash is written without its escape, so the serialization parses back to different parameters
+- `Broiler.Net.Http.MimeType.CollectQuotedStringValue(ReadOnlySpan<char>, ref int)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=FETCH s2.2, `94D532`, PENDING
+  - Falsified if: an unterminated quoted string that ends in a backslash throws or loses the backslash
+- `Broiler.Net.Http.MimeType.IsQuotedStringTokenText(string)` in `src/Broiler.Net/Http/MimeType.cs` - Security=High, Spec=MIMESNIFF s3, `6FAED7`, PENDING
+  - Falsified if: a value holding U+0100 or a control other than tab is accepted as a parameter value
 - `Broiler.Net.Http.RequestContext` in `src/Broiler.Net/Http/RequestContext.cs` - Security=High, Spec=none cited, `445DA9`, PENDING
   - Falsified if: a RequestContext initialized with only Destination and Client is not no-cors with credentials include and redirect follow
 - `Broiler.Net.Http.RequestContext.IsNavigation` in `src/Broiler.Net/Http/RequestContext.cs` - Security=High, Spec=none cited, `8EC5E0`, PENDING
@@ -505,5 +558,5 @@ An assessment is a comment, so changing one moves no fingerprint anywhere, and n
 mechanical checks that it is right; the check holds its values to their vocabularies and no
 further.
 
-270 of the 270 assessed units declare `Origin=AI`. Reading a declaration is the only thing
+297 of the 297 assessed units declare `Origin=AI`. Reading a declaration is the only thing
 that makes it read.

@@ -16,4 +16,13 @@ Its original [CC0 public-domain dedication](https://creativecommons.org/publicdo
 is preserved. Tests canonicalize expected IDN results to ASCII for this API. The fixture
 is not part of the package.
 
+## web-platform-tests vectors
+
+`tests/Broiler.Net.Tests/Fixtures/wpt/` holds four JSON vector files from
+[web-platform-tests](https://github.com/web-platform-tests/wpt), at the commit recorded in its
+`README.md`: the `data:` URL and forgiving-base64 vectors from `fetch/data-urls/resources` and the
+MIME type vectors from `mimesniff/mime-types/resources`. They are unmodified and stay under their
+[3-Clause BSD License](https://github.com/web-platform-tests/wpt/blob/master/LICENSE.md), a copy of
+which is beside them. They are test fixtures and are not part of the package.
+
 No upstream cookie implementation or Web Platform Test code is copied into this package.

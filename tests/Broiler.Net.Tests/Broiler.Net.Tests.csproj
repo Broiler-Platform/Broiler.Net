@@ -9,6 +9,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
     <None Update="Fixtures/test_psl.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures/wpt/**" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../src/Broiler.Net/Data/public-suffix-list.json" Link="Fixtures/public-suffix-list.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -2,10 +2,10 @@
 
 A dependency-neutral net10.0 networking package for Broiler hosts: a cookie engine
 (`Broiler.Net.Cookies`), site resolution (`Broiler.Net.Sites`) and a policy-aware HTTP
-transport (`Broiler.Net.Http`). The runtime package depends only on the .NET base class
-library. Broiler.HTML, Broiler.HtmlBridge and Broiler.Browser use it through one
-profile-owned `BrowserNetworkSession` (stage 3 of the browser cookie support plan; see
-Broiler.Browser `docs/cookie-support-stage-3.md`).
+transport with MIME type and `data:` URL parsing (`Broiler.Net.Http`). The runtime package
+depends only on the .NET base class library. Broiler.HTML, Broiler.HtmlBridge and
+Broiler.Browser use it through one profile-owned `BrowserNetworkSession` (stage 3 of the
+browser cookie support plan; see Broiler.Browser `docs/cookie-support-stage-3.md`).
 
 ```csharp
 using Broiler.Net.Cookies;
@@ -248,6 +248,33 @@ The session guarantees:
 
 Not implemented: HTTP and preflight caches, referrer policy (the session never sets
 Referer), mixed-content blocking and CSP (hosts apply the last two through `HopPolicy`).
+
+## MIME types and data: URLs
+
+`MimeType` parses and serializes MIME types as the MIME Sniffing Standard does: a lowercase
+type and subtype, and parameters in the order they were written (names lowercased, values as
+written, the first of a repeated name kept), plus the standard's groups (`IsImage`, `IsHtml`,
+`IsXml`, `IsJson`, `IsJavaScript`). Only a malformed type or subtype fails; a malformed
+parameter is dropped. Case is folded for ASCII letters only, as the standard specifies.
+
+`DataUrl` is the Fetch Standard's `data:` URL processor: the declared `MimeType`, which falls
+back to `text/plain;charset=US-ASCII`, and the decoded body. Base64 bodies go through
+`ForgivingBase64`, Infra's forgiving-base64 decode, which accepts unpadded input as browsers
+do; `Convert.FromBase64String` throws for it. Neither API throws for malformed input.
+
+```csharp
+using Broiler.Net.Http;
+
+if (DataUrl.TryParse("data:text/css;charset=utf-8;base64,Ym9keXt9", out var data)
+    && data.MimeType.Essence == "text/css")
+{
+    string css = data.DecodeUtf8(); // "body{}"
+}
+```
+
+Not implemented: the URL parser itself (`DataUrl` applies only the steps of it that change
+what reaches the processor) and decoding text by its `charset` parameter (`DecodeUtf8` is the
+Encoding Standard's UTF-8 decode).
 
 ## Build and test
 
