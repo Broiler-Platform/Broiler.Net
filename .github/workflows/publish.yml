@@ -7,10 +7,6 @@ on:
         description: 'Optional preview.N (unused and at least the next preview). Empty selects automatically.'
         type: string
         default: ''
-      dry-run:
-        description: Validate and attach packages without pushing to nuget.org
-        type: boolean
-        default: true
   push:
     tags: ['v*']
 
@@ -27,12 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-    env:
-      DRY_RUN: ${{ github.event_name == 'push' && 'false' || inputs.dry-run }}
     steps:
       # First, so a real publish without the secret stops before any setup or build.
       - name: Require a NuGet.org API key
-        if: env.DRY_RUN != 'true'
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_TOKEN }}
         run: |
@@ -68,7 +61,6 @@ jobs:
     needs: [version, validate]
     runs-on: ubuntu-latest
     env:
-      DRY_RUN: ${{ github.event_name == 'push' && 'false' || inputs.dry-run }}
       PACKAGE_VERSION: ${{ needs.version.outputs.version }}
     steps:
       - name: Set up .NET
@@ -94,7 +86,6 @@ jobs:
       # later) skips what is already on nuget.org, and the summary reports what it skipped.
       - name: Push to nuget.org
         id: push
-        if: env.DRY_RUN != 'true'
         shell: bash
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_TOKEN }}
@@ -143,9 +134,7 @@ jobs:
           {
             echo "### Broiler.Net $PACKAGE_VERSION"
             echo
-            if [ "$DRY_RUN" = "true" ]; then
-              echo 'Dry run: validated packages are attached; nothing was pushed.'
-            elif [ "$PUSH_OUTCOME" = 'skipped' ] || [ -z "$PUSH_OUTCOME" ]; then
+            if [ "$PUSH_OUTCOME" = 'skipped' ] || [ -z "$PUSH_OUTCOME" ]; then
               echo 'Nothing was pushed: an earlier step failed or the run was cancelled.'
             else
               if [ "$PACKAGE_DUPLICATE" = 'true' ]; then
