@@ -326,9 +326,10 @@ isolated package cache), and pushes the validated package and its symbols to nug
 the `NUGET_TOKEN` secret. The workflows and `eng/` scripts are shared with Broiler.HTML,
 Broiler.HtmlBridge and Broiler.Layout.
 
-1. Run **Publish** from `main` with the default `dry-run=true`. It validates the package
-   and attaches it to the run as `nuget-packages`; nothing is pushed.
-2. Publish with **either** a run with `dry-run=false` **or** a pushed `v0.1.0-preview.N`
+1. Check the latest CI run on `main`. CI packs the package, verifies a fresh consumer
+   restore from nuget.org and attaches it as `nuget-packages`; nothing is pushed. Publish
+   has no dry-run mode.
+2. Publish with **either** a dispatched **Publish** run **or** a pushed `v0.1.0-preview.N`
    tag. They are alternatives: a tag is not a follow-up to a dispatched publish.
 3. Wait until the new version is listed on nuget.org before publishing again. nuget.org
    validates and indexes a new version for several minutes (longer for a new package ID),
@@ -354,6 +355,6 @@ so the floor is `preview.1` and the first release is `0.1.0-preview.1`. The opti
 Publishing needs the organization secret `NUGET_TOKEN` to be available to this repository,
 and its nuget.org API key must be allowed to push new packages whose ID matches
 `Broiler.Net` (a key limited to existing packages or to other IDs is rejected on the
-first push). A dry run checks neither, so confirm the key's scope and glob on nuget.org
-before the first run with `dry-run=false`. A run with `dry-run=false`, or from a tag,
-stops at its first step when the secret is missing.
+first push). CI checks neither, so confirm the key's scope and glob on nuget.org
+before the first Publish run. A Publish run stops at its first step when the secret is
+missing.
