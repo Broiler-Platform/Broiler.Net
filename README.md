@@ -137,7 +137,9 @@ Implementation policy:
 pooled `SocketsHttpHandler` with automatic cookies and redirects disabled, and Fetch's
 request policy. It is thread-safe; share one per profile. It implements
 `IBrowserRequestTransport` (`SendAsync`, and `Send` for synchronous renderer loaders,
-which uses the handler's synchronous path) and `IDocumentCookieAccess` (document.cookie).
+which blocks on asynchronous network I/O away from the caller's synchronization context)
+and `IDocumentCookieAccess` (document.cookie). Requests prefer HTTP/2 with HTTP/1.1 fallback;
+HTTP/3 is not selected. The final response's version identifies the negotiated protocol.
 Give script bindings `IDocumentCookieAccess`, never the store.
 
 ```csharp
@@ -297,7 +299,8 @@ Tests include deterministic time, table-driven algorithm cases, 10,000 seeded
 malformed fields, a seeded state-machine model, concurrency, quota and eviction cases,
 a 6000-cookie store, event-lock and observer-failure checks, the pinned upstream PSL
 fixture, and transport tests against a scripted handler and an in-process loopback
-HTTP/1.1 server. They are component tests, not a WPT browser conformance run. No test
+HTTP/1.1 server, plus TLS HTTP/2 negotiation and fallback against in-process Kestrel.
+They are component tests, not a WPT browser conformance run. No test
 needs an external web server; package restore is the only network requirement.
 
 For PSL updates, select an upstream commit on publicsuffix/list main, inspect its

@@ -261,7 +261,7 @@ public sealed class TransportRequestTests
         using (await session.SendAsync(Get("https://a.test/3", ("User-Agent", "Custom/1")), RequestContext.TopLevelNavigation(null))) { }
         var hops = _handler.Hops;
         Assert.Equal(["POST", "patch", "GET"], hops.Select(h => h.Method));
-        Assert.All(hops, h => Assert.Equal(HttpVersion.Version11, h.Version));
+        Assert.All(hops, h => Assert.Equal(HttpVersion.Version20, h.Version));
         Assert.Equal(BroilerUserAgent.Value, hops[0].Header("User-Agent"));
         Assert.Equal("Custom/1", hops[2].Header("User-Agent"));
 
@@ -404,7 +404,7 @@ public sealed class TransportRequestTests
     }
 
     [Fact]
-    public async Task SyncSendUsesTheHandlersSynchronousPathForEveryHop()
+    public async Task SyncSendUsesTheHandlersAsyncPathForEveryHop()
     {
         using var session = Session(_handler);
         _handler.Redirect("https://a.test/1", 302, "https://b.test/2");
@@ -412,15 +412,17 @@ public sealed class TransportRequestTests
             ("Access-Control-Allow-Origin", "https://a.test"), ("Access-Control-Allow-Headers", "x-custom")));
         using var response = session.Send(Get("https://a.test/1", ("X-Custom", "1")), RequestContext.Fetch(Top("https://a.test/")));
         Assert.Equal(["GET https://a.test/1", "OPTIONS https://b.test/2", "GET https://b.test/2"], _handler.Hops.Select(h => h.Target));
-        Assert.All(_handler.Hops, h => Assert.True(h.Sync));
+        Assert.All(_handler.Hops, h => Assert.False(h.Sync));
         Assert.Equal(200, response.StatusCode);
 
         using (await session.SendAsync(Get("https://a.test/3"), RequestContext.TopLevelNavigation(null))) { }
         Assert.False(_handler.Hops[^1].Sync);
     }
 
-    [Fact]
-    public void SendAsyncNeverResumesOnTheCallersSynchronizationContext()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SendNeverResumesOnTheCallersSynchronizationContext(bool synchronous)
     {
         var context = new CountingContext();
         var previous = SynchronizationContext.Current;
@@ -430,8 +432,10 @@ public sealed class TransportRequestTests
         {
             // Blocking on purpose: a captured context would receive the continuation as a Post.
 #pragma warning disable xUnit1031
-            using var response = session.SendAsync(Request("POST", "https://a.test/start", "body"), RequestContext.TopLevelNavigation(null))
-                .GetAwaiter().GetResult();
+            using var request = Request("POST", "https://a.test/start", "body");
+            using var response = synchronous
+                ? session.Send(request, RequestContext.TopLevelNavigation(null))
+                : session.SendAsync(request, RequestContext.TopLevelNavigation(null)).GetAwaiter().GetResult();
 #pragma warning restore xUnit1031
             Assert.Equal("https://a.test/end", response.FinalUrl.AbsoluteUri);
         }

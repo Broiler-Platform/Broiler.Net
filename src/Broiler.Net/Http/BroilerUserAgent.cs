@@ -47,25 +47,26 @@ public static class BroilerUserAgent
 }
 
 /// <summary>
-/// The HTTP version Broiler requests and the matching PerformanceResourceTiming.nextHopProtocol value.
+/// The preferred HTTP version Broiler requests, with fallback for HTTP/1.1 servers.
 /// Moved here from Broiler.Layout.Net.
 /// </summary>
 // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=4D89F9
-// Broiler-Falsified-If: a client passed through Apply negotiates HTTP/2 or HTTP/3 while NextHopProtocol still reports http/1.1
+// Broiler-Falsified-If: a client passed through Apply cannot negotiate HTTP/2 or fall back to HTTP/1.1
 // Broiler-Human:        PENDING
 public static class BroilerHttpProtocol
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=902D45
-    // Broiler-Falsified-If: Version names an HTTP version other than the one the NextHopProtocol string identifies
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=1631AE
+    // Broiler-Falsified-If: the preferred version is not HTTP/2
     // Broiler-Human:        PENDING
-    public static readonly Version Version = HttpVersion.Version11;
+    public static readonly Version Version = HttpVersion.Version20;
     // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=AB5D46
-    // Broiler-Falsified-If: a request made with this policy is upgraded above HTTP/1.1 when the server offers HTTP/2 over ALPN
+    // Broiler-Falsified-If: a request made with this policy upgrades to HTTP/3 or refuses HTTP/1.1 fallback
     // Broiler-Human:        PENDING
     public const HttpVersionPolicy VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
     // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=3DF1C0
-    // Broiler-Falsified-If: the string differs from the ALPN protocol identifier of the HTTP version held in Version
+    // Broiler-Falsified-If: callers treat this legacy fallback token as a negotiated protocol measurement
     // Broiler-Human:        PENDING
+    // Retained for binary/source compatibility. New timing consumers must read the response version.
     public const string NextHopProtocol = "http/1.1";
 
     // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=981B51

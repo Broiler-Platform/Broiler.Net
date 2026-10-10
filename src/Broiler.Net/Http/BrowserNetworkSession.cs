@@ -369,11 +369,19 @@ public sealed class BrowserNetworkSession : IBrowserRequestTransport, IDocumentC
                 throw Error(TransportError.Cors, $"The CORS preflight to {url} does not allow the {name} header.");
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=012FE1
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=AE8DA5
     // Broiler-Falsified-If: with async false the returned ValueTask is still pending when the call returns
     // Broiler-Human:        PENDING
-    private async ValueTask<HttpResponseMessage> InvokeAsync(HttpRequestMessage message, bool async, CancellationToken cancellationToken) =>
-        async ? await _invoker.SendAsync(message, cancellationToken).ConfigureAwait(false) : _invoker.Send(message, cancellationToken);
+    private async ValueTask<HttpResponseMessage> InvokeAsync(HttpRequestMessage message, bool async, CancellationToken cancellationToken)
+    {
+        if (async) return await _invoker.SendAsync(message, cancellationToken).ConfigureAwait(false);
+
+        // SocketsHttpHandler.Send rejects HTTP/2. Keep the synchronous browser API, but run
+        // the asynchronous transport on the pool so a handler cannot capture the blocked
+        // UI/JavaScript synchronization context. GetResult unwraps cancellation and errors.
+        return Task.Run(() => _invoker.SendAsync(message, cancellationToken), cancellationToken)
+            .GetAwaiter().GetResult();
+    }
 
     // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=EF52D2
     // Broiler-Falsified-If: a message built from a header list that already names User-Agent carries the session's default User-Agent as well
