@@ -283,7 +283,7 @@ Encoding Standard's UTF-8 decode).
 Build, test, and create an unpublished local package:
 
 ```powershell
-dotnet test Broiler.Net.slnx -c Release
+dotnet test --solution Broiler.Net.slnx -c Release
 node --test eng/resolve-preview-version.test.mjs
 ./eng/pack.ps1 -Output artifacts/packages
 ```
@@ -309,7 +309,7 @@ then run:
 
 ```powershell
 ./scripts/update-public-suffix-list.ps1 -Revision <40-hex-commit> -ListSha256 <64-hex-hash> -FixtureSha256 <64-hex-hash>
-dotnet test Broiler.Net.slnx -c Release
+dotnet test --solution Broiler.Net.slnx -c Release
 ```
 
 The updater refuses revisions that the GitHub compare API does not report as on upstream

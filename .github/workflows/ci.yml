@@ -67,7 +67,7 @@ jobs:
           dotnet build Broiler.Net.slnx -c Release --nologo "${args[@]}"
 
       - name: Test
-        run: dotnet test Broiler.Net.slnx -c Release --no-build --nologo --logger 'trx;LogFilePrefix=broiler-net' --results-directory test-results
+        run: dotnet test --solution Broiler.Net.slnx -c Release --no-build --no-logo --results-directory "$GITHUB_WORKSPACE/test-results" -- --report-trx --report-trx-filename broiler-net.trx
 
       - name: Upload test reports
         if: always()
