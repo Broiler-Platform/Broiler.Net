@@ -21,7 +21,7 @@ public sealed class TransportCorsTests
     private async Task<TransportError> CorsError(HttpRequestMessage request, RequestContext context)
     {
         using var session = Session(_handler);
-        return (await Fails(session.SendAsync(request, context))).Error;
+        return (await Fails(session.SendAsync(request, context, TestContext.Current.CancellationToken))).Error;
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class TransportCorsTests
     {
         using var session = Session(_handler);
         _handler.On("https://b.test/", 200, AllowOrigin());
-        using var response = await session.SendAsync(Get("https://b.test/"), Anonymous);
+        using var response = await session.SendAsync(Get("https://b.test/"), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal(ResponseTainting.Cors, response.Tainting);
         Assert.Equal(A, Assert.Single(_handler.Hops).Header("Origin"));
     }
@@ -39,7 +39,7 @@ public sealed class TransportCorsTests
     {
         _handler.On("https://b.test/", 200, AllowOrigin("*"), AllowCredentials());
         using var session = Session(_handler);
-        using (var response = await session.SendAsync(Get("https://b.test/"), Anonymous)) Assert.Equal(200, response.StatusCode);
+        using (var response = await session.SendAsync(Get("https://b.test/"), Anonymous, TestContext.Current.CancellationToken)) Assert.Equal(200, response.StatusCode);
         Assert.Equal(TransportError.Cors, await CorsError(Get("https://b.test/"), Credentialed));
     }
 
@@ -53,7 +53,7 @@ public sealed class TransportCorsTests
         Assert.Equal(TransportError.Cors, await CorsError(Get("https://b.test/"), Credentialed));
         _handler.On("https://b.test/", 200, AllowOrigin(), AllowCredentials());
         using var session = Session(_handler);
-        using var response = await session.SendAsync(Get("https://b.test/"), Credentialed);
+        using var response = await session.SendAsync(Get("https://b.test/"), Credentialed, TestContext.Current.CancellationToken);
         Assert.Equal(200, response.StatusCode);
     }
 
@@ -76,7 +76,7 @@ public sealed class TransportCorsTests
     {
         using var session = Session(_handler);
         _handler.On("https://b.test/", 200, ("Set-Cookie", "x=1; SameSite=None; Secure"));
-        Assert.Equal(TransportError.Cors, (await Fails(session.SendAsync(Get("https://b.test/"), Credentialed))).Error);
+        Assert.Equal(TransportError.Cors, (await Fails(session.SendAsync(Get("https://b.test/"), Credentialed, TestContext.Current.CancellationToken))).Error);
         Assert.Equal("b.test", Assert.Single(session.Cookies.Snapshot()).Domain);
     }
 
@@ -90,7 +90,7 @@ public sealed class TransportCorsTests
         Assert.Equal(TransportError.Cors, await CorsError(Get("https://b.test/1"), Anonymous));
         _handler.On("https://b.test/2", 200, AllowOrigin());
         using var session = Session(_handler);
-        using var response = await session.SendAsync(Get("https://b.test/1"), Anonymous);
+        using var response = await session.SendAsync(Get("https://b.test/1"), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal("https://b.test/2", response.FinalUrl.AbsoluteUri);
     }
 
@@ -99,9 +99,9 @@ public sealed class TransportCorsTests
     {
         using var session = Session(_handler);
         _handler.On("https://b.test/", 200, AllowOrigin());
-        using (await session.SendAsync(Get("https://b.test/", ("Accept", "text/html"), ("Accept-Language", "de"), ("Range", "bytes=0-")), Anonymous)) { }
-        using (await session.SendAsync(Request("POST", "https://b.test/", "text", ("Content-Language", "en")), Anonymous)) { }
-        using (await session.SendAsync(Request("HEAD", "https://b.test/"), Anonymous)) { }
+        using (await session.SendAsync(Get("https://b.test/", ("Accept", "text/html"), ("Accept-Language", "de"), ("Range", "bytes=0-")), Anonymous, TestContext.Current.CancellationToken)) { }
+        using (await session.SendAsync(Request("POST", "https://b.test/", "text", ("Content-Language", "en")), Anonymous, TestContext.Current.CancellationToken)) { }
+        using (await session.SendAsync(Request("HEAD", "https://b.test/"), Anonymous, TestContext.Current.CancellationToken)) { }
         Assert.Equal(["GET", "POST", "HEAD"], _handler.Hops.Select(h => h.Method));
     }
 
@@ -109,7 +109,7 @@ public sealed class TransportCorsTests
     public async Task SameOriginRequestsNeverPreflight()
     {
         using var session = Session(_handler);
-        using var response = await session.SendAsync(Request("PUT", A + "/", "x", ("X-Custom", "1")), Anonymous);
+        using var response = await session.SendAsync(Request("PUT", A + "/", "x", ("X-Custom", "1")), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal(ResponseTainting.Basic, response.Tainting);
         Assert.Equal("PUT", Assert.Single(_handler.Hops).Method);
     }
@@ -123,7 +123,7 @@ public sealed class TransportCorsTests
             ("Access-Control-Allow-Headers", "X-Custom, x-another"), ("Access-Control-Allow-Headers", "content-type"), ("Set-Cookie", "pre=1")]),
             AllowOrigin(), AllowCredentials());
         var request = Request("PUT", "https://b.test/api", "{}", ("X-Custom", "1"), ("x-another", "2"), ("Content-Type", "application/json"));
-        using var response = await session.SendAsync(request, Credentialed);
+        using var response = await session.SendAsync(request, Credentialed, TestContext.Current.CancellationToken);
         var (preflight, actual) = (_handler.Hops[0], _handler.Hops[1]);
         Assert.Equal("OPTIONS", preflight.Method);
         Assert.Equal("PUT", preflight.Header("Access-Control-Request-Method"));
@@ -146,9 +146,9 @@ public sealed class TransportCorsTests
         using var session = Session(_handler);
         Route("https://b.test/", (204, [AllowOrigin(), ("Access-Control-Allow-Headers", "accept")]), AllowOrigin());
         var value = new string('a', 100);
-        using (await session.SendAsync(Get("https://b.test/", ("Accept", value + value[..28]), ("Accept-Language", "de")), Anonymous)) { }
+        using (await session.SendAsync(Get("https://b.test/", ("Accept", value + value[..28]), ("Accept-Language", "de")), Anonymous, TestContext.Current.CancellationToken)) { }
         Assert.Equal(["GET"], _handler.Hops.Select(h => h.Method));
-        using (await session.SendAsync(Get("https://b.test/", ("Accept", value), ("Accept", value), ("Accept-Language", "de")), Anonymous)) { }
+        using (await session.SendAsync(Get("https://b.test/", ("Accept", value), ("Accept", value), ("Accept-Language", "de")), Anonymous, TestContext.Current.CancellationToken)) { }
         Assert.Equal("accept", _handler.Hops[1].Header("Access-Control-Request-Headers"));
         Assert.Equal("GET", _handler.Hops[2].Method);
     }
@@ -180,7 +180,7 @@ public sealed class TransportCorsTests
         (string, string)[] wildcard = [AllowOrigin(), AllowCredentials(), ("Access-Control-Allow-Methods", "*"), ("Access-Control-Allow-Headers", "*")];
         Route("https://b.test/", (204, wildcard), AllowOrigin(), AllowCredentials());
         using (var session = Session(_handler))
-        using (var response = await session.SendAsync(Request("PUT", "https://b.test/", "x", ("X-Custom", "1")), Anonymous))
+        using (var response = await session.SendAsync(Request("PUT", "https://b.test/", "x", ("X-Custom", "1")), Anonymous, TestContext.Current.CancellationToken))
             Assert.Equal(200, response.StatusCode);
         Assert.Equal(TransportError.Cors, await CorsError(Request("PUT", "https://b.test/", "x"), Credentialed));
         Route("https://b.test/", (204, [AllowOrigin(), AllowCredentials(), ("Access-Control-Allow-Methods", "PUT"), ("Access-Control-Allow-Headers", "*")]),
@@ -195,7 +195,7 @@ public sealed class TransportCorsTests
         Assert.Equal(TransportError.Cors, await CorsError(Get("https://b.test/", ("Authorization", "Basic eA==")), Anonymous));
         Route("https://b.test/", (204, [AllowOrigin(), ("Access-Control-Allow-Headers", "*, Authorization")]), AllowOrigin());
         using var session = Session(_handler);
-        using var response = await session.SendAsync(Get("https://b.test/", ("Authorization", "Basic eA==")), Anonymous);
+        using var response = await session.SendAsync(Get("https://b.test/", ("Authorization", "Basic eA==")), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal("Basic eA==", _handler.Hops[^1].Header("Authorization"));
     }
 
@@ -207,7 +207,7 @@ public sealed class TransportCorsTests
             ? ScriptedHandler.Reply(204, AllowOrigin(), ("Access-Control-Allow-Methods", "PUT"))
             : ScriptedHandler.Reply(307, AllowOrigin(), ("Location", "https://c.test/2")));
         Route("https://c.test/2", (204, [AllowOrigin("null"), ("Access-Control-Allow-Methods", "PUT")]), AllowOrigin("null"));
-        using var response = await session.SendAsync(Request("PUT", "https://b.test/1", "x"), Anonymous);
+        using var response = await session.SendAsync(Request("PUT", "https://b.test/1", "x"), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal(["OPTIONS https://b.test/1", "PUT https://b.test/1", "OPTIONS https://c.test/2", "PUT https://c.test/2"],
             _handler.Hops.Select(h => h.Target));
         Assert.Equal([A, A, "null", "null"], _handler.Hops.Select(h => h.Header("Origin")));
@@ -223,7 +223,7 @@ public sealed class TransportCorsTests
         Assert.Equal("null", _handler.Hops[^1].Header("Origin"));
         _handler.On(A + "/2", 200, AllowOrigin("null"));
         using var session = Session(_handler);
-        using var response = await session.SendAsync(Get("https://b.test/1"), Anonymous);
+        using var response = await session.SendAsync(Get("https://b.test/1"), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal(ResponseTainting.Cors, response.Tainting);
     }
 
@@ -234,7 +234,7 @@ public sealed class TransportCorsTests
         _handler.Redirect(A + "/1", 302, "https://b.test/2");
         _handler.Redirect("https://b.test/2", 302, "/3", AllowOrigin());
         _handler.On("https://b.test/3", 200, AllowOrigin());
-        using var response = await session.SendAsync(Get(A + "/1"), Anonymous);
+        using var response = await session.SendAsync(Get(A + "/1"), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal([null, A, A], _handler.Hops.Select(h => h.Header("Origin")));
     }
 
@@ -247,7 +247,7 @@ public sealed class TransportCorsTests
         Assert.Equal(TransportError.Cors, await CorsError(Get("https://b.test/1"), Anonymous));
         _handler.Redirect(A + "/1", 302, "https://user@a.test/2");
         using var session = Session(_handler);
-        using var response = await session.SendAsync(Get(A + "/1"), Anonymous);
+        using var response = await session.SendAsync(Get(A + "/1"), Anonymous, TestContext.Current.CancellationToken);
         Assert.Equal("user", response.FinalUrl.UserInfo);
     }
 
@@ -257,7 +257,7 @@ public sealed class TransportCorsTests
         using var session = Session(_handler);
         _handler.On("https://b.test/", 200, AllowOrigin(), ("Access-Control-Expose-Headers", "X-Exposed"), ("X-Exposed", "1"), ("X-Hidden", "1"),
             ("Set-Cookie", "c=1; SameSite=None; Secure"));
-        using var response = await session.SendAsync(Get("https://b.test/"), Anonymous);
+        using var response = await session.SendAsync(Get("https://b.test/"), Anonymous, TestContext.Current.CancellationToken);
         var visible = response.GetScriptVisibleHeaders().Select(h => h.Key).ToArray();
         Assert.Contains("X-Exposed", visible);
         Assert.DoesNotContain("X-Hidden", visible);
@@ -270,12 +270,12 @@ public sealed class TransportCorsTests
     {
         using var session = Session(_handler);
         _handler.On("https://b.test/", 200, AllowOrigin(), AllowCredentials(), ("Access-Control-Expose-Headers", "*"), ("X-Internal", "1"));
-        using (var credentialed = await session.SendAsync(Get("https://b.test/"), Credentialed))
+        using (var credentialed = await session.SendAsync(Get("https://b.test/"), Credentialed, TestContext.Current.CancellationToken))
         {
             Assert.Equal(CredentialsMode.Include, credentialed.Credentials);
             Assert.DoesNotContain(credentialed.GetScriptVisibleHeaders(), h => h.Key == "X-Internal");
         }
-        using (var anonymous = await session.SendAsync(Get("https://b.test/"), Anonymous))
+        using (var anonymous = await session.SendAsync(Get("https://b.test/"), Anonymous, TestContext.Current.CancellationToken))
             Assert.Contains(anonymous.GetScriptVisibleHeaders(), h => h.Key == "X-Internal");
     }
 
@@ -286,10 +286,10 @@ public sealed class TransportCorsTests
         Route("https://b.test/font", (204, [AllowOrigin(), ("Access-Control-Allow-Headers", "x-custom")]), AllowOrigin());
         var font = RequestContext.Subresource(_top, RequestDestination.Font);
         (string, string)[] userAgentHeaders = [("Referer", A + "/page"), ("Sec-Fetch-Mode", "cors"), ("Accept-Encoding", "br"), ("DNT", "1")];
-        using (await session.SendAsync(Get("https://b.test/font", userAgentHeaders), font)) { }
+        using (await session.SendAsync(Get("https://b.test/font", userAgentHeaders), font, TestContext.Current.CancellationToken)) { }
         Assert.Equal(["GET https://b.test/font"], _handler.Hops.Select(h => h.Target));
         Assert.Equal(A + "/page", _handler.Hops[0].Header("Referer"));
-        using (await session.SendAsync(Get("https://b.test/font", [.. userAgentHeaders, ("X-Custom", "1")]), font)) { }
+        using (await session.SendAsync(Get("https://b.test/font", [.. userAgentHeaders, ("X-Custom", "1")]), font, TestContext.Current.CancellationToken)) { }
         Assert.Equal("x-custom", _handler.Hops[1].Header("Access-Control-Request-Headers"));
     }
 }

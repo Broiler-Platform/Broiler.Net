@@ -19,9 +19,9 @@ public sealed class TransportRequestTests
     public async Task NonHttpUrlsAreInvalidBeforeAnyIo(string url)
     {
         using var session = Session(_handler);
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get(url), RequestContext.TopLevelNavigation(null)))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get(url), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))).Error);
         Assert.Equal(TransportError.InvalidRequest,
-            Assert.Throws<TransportException>(() => session.Send(Get(url), RequestContext.TopLevelNavigation(null))).Error);
+            Assert.Throws<TransportException>(() => session.Send(Get(url), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)).Error);
         Assert.Empty(_handler.Hops);
     }
 
@@ -30,9 +30,9 @@ public sealed class TransportRequestTests
     {
         using var session = Session(_handler);
         var relative = new HttpRequestMessage(HttpMethod.Get, new Uri("/x", UriKind.Relative));
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(relative, RequestContext.TopLevelNavigation(null)))).Error);
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test:6000/"), RequestContext.TopLevelNavigation(null)))).Error);
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("http://a.test:25/"), RequestContext.TopLevelNavigation(null)))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(relative, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test:6000/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("http://a.test:25/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))).Error);
         Assert.Empty(_handler.Hops);
     }
 
@@ -43,7 +43,7 @@ public sealed class TransportRequestTests
     public async Task ForbiddenMethodsAreInvalid(string method)
     {
         using var session = Session(_handler);
-        var error = await Fails(session.SendAsync(Request(method, "https://a.test/"), RequestContext.TopLevelNavigation(null)));
+        var error = await Fails(session.SendAsync(Request(method, "https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken));
         Assert.Equal(TransportError.InvalidRequest, error.Error);
         Assert.Empty(_handler.Hops);
     }
@@ -54,9 +54,9 @@ public sealed class TransportRequestTests
         using var session = Session(_handler);
         var context = RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Image);
         foreach (var method in new[] { "PUT", "DELETE", "PATCH", "OPTIONS" })
-            Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Request(method, "https://a.test/x"), context))).Error);
+            Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Request(method, "https://a.test/x"), context, TestContext.Current.CancellationToken))).Error);
         Assert.Empty(_handler.Hops);
-        using var ok = await session.SendAsync(Request("post", "https://b.test/x", "body"), context);
+        using var ok = await session.SendAsync(Request("post", "https://b.test/x", "body"), context, TestContext.Current.CancellationToken);
         Assert.Equal("POST", Assert.Single(_handler.Hops).Method);
     }
 
@@ -66,12 +66,12 @@ public sealed class TransportRequestTests
         using var session = Session(_handler);
         var subresource = new RequestContext { Destination = RequestDestination.Script };
         var nested = new RequestContext { Destination = RequestDestination.IFrame, Mode = RequestMode.Navigate };
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/"), subresource))).Error);
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/"), nested))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/"), subresource, TestContext.Current.CancellationToken))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/"), nested, TestContext.Current.CancellationToken))).Error);
         Assert.Empty(_handler.Hops);
-        using (var response = await session.SendAsync(Get("https://a.test/"), new RequestContext { Destination = RequestDestination.Document, Mode = RequestMode.Navigate }))
+        using (var response = await session.SendAsync(Get("https://a.test/"), new RequestContext { Destination = RequestDestination.Document, Mode = RequestMode.Navigate }, TestContext.Current.CancellationToken))
             Assert.Equal(200, response.StatusCode);
-        using (var frame = await session.SendAsync(Get("https://a.test/"), RequestContext.NestedNavigation(Top("https://a.test/"), null)))
+        using (var frame = await session.SendAsync(Get("https://a.test/"), RequestContext.NestedNavigation(Top("https://a.test/"), null), TestContext.Current.CancellationToken))
             Assert.Equal(200, frame.StatusCode);
     }
 
@@ -95,7 +95,7 @@ public sealed class TransportRequestTests
             RequestContext.TopLevelNavigation(null) with { ReloadWasSameSite = true },
         ];
         foreach (var context in invalid)
-            Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/"), context))).Error);
+            Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/"), context, TestContext.Current.CancellationToken))).Error);
         Assert.Empty(_handler.Hops);
     }
 
@@ -109,10 +109,10 @@ public sealed class TransportRequestTests
     {
         using var session = Session(_handler);
         var context = RequestContext.Fetch(Top("https://a.test/"), credentials: CredentialsMode.Omit);
-        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/x", ("X-Foo", value)), context))).Error);
+        Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://a.test/x", ("X-Foo", value)), context, TestContext.Current.CancellationToken))).Error);
         var body = Request("POST", "https://a.test/x", "x");
         body.Content!.Headers.TryAddWithoutValidation("Content-Disposition", value);
-        Assert.Equal(TransportError.InvalidRequest, Assert.Throws<TransportException>(() => session.Send(body, context)).Error);
+        Assert.Equal(TransportError.InvalidRequest, Assert.Throws<TransportException>(() => session.Send(body, context, TestContext.Current.CancellationToken)).Error);
         Assert.Empty(_handler.Hops);
     }
 
@@ -120,7 +120,7 @@ public sealed class TransportRequestTests
     public async Task HeaderValuesAreNormalized()
     {
         using var session = Session(_handler);
-        using (await session.SendAsync(Get("https://a.test/", ("X-Foo", " \ta b\r\n")), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(Get("https://a.test/", ("X-Foo", " \ta b\r\n")), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         Assert.Equal("a b", Assert.Single(_handler.Hops).Header("X-Foo"));
     }
 
@@ -132,7 +132,7 @@ public sealed class TransportRequestTests
         var request = Request("POST", "https://a.test/form", "x", ("Connection", "keep-alive, Upgrade"), ("Upgrade", "h2c"), ("Keep-Alive", "timeout=5"),
             ("TE", "trailers"), ("Trailer", "X-Sum"), ("Expect", "100-continue"));
         request.Headers.TransferEncodingChunked = true;
-        using (await session.SendAsync(request, RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         Assert.Equal(["POST https://a.test/form", "GET https://a.test/done"], _handler.Hops.Select(h => h.Target));
         foreach (var name in new[] { "Transfer-Encoding", "Connection", "Upgrade", "Keep-Alive", "TE", "Trailer", "Expect" })
             Assert.All(_handler.Hops, h => Assert.Null(h.Header(name)));
@@ -146,7 +146,7 @@ public sealed class TransportRequestTests
         var request = Request("POST", "https://bank.test/transfer", "{}", ("X-Requested-With", "XMLHttpRequest"), ("Content-Type", "application/json"),
             ("Authorization", "Basic eA=="), ("Accept", "text/html"), ("Content-Language", "de"), ("Referer", "https://a.test/"), ("User-Agent", "UA/1"),
             ("Range", "bytes=0-"));
-        using (await session.SendAsync(request, RequestContext.Fetch(Top("https://a.test/"), RequestMode.NoCors, CredentialsMode.Include))) { }
+        using (await session.SendAsync(request, RequestContext.Fetch(Top("https://a.test/"), RequestMode.NoCors, CredentialsMode.Include), TestContext.Current.CancellationToken)) { }
         var hop = Assert.Single(_handler.Hops);
         Assert.Equal("POST", hop.Method);
         foreach (var name in new[] { "X-Requested-With", "Content-Type", "Authorization" }) Assert.Null(hop.Header(name));
@@ -174,12 +174,12 @@ public sealed class TransportRequestTests
             RequestDestination.Empty => RequestContext.Fetch(top),
             _ => RequestContext.Subresource(top, destination),
         };
-        using (await session.SendAsync(Get("https://a.test/x"), context)) { }
-        using (await session.SendAsync(Get("https://a.test/x", ("Accept", "a/b"), ("Accept-Language", "fr")), context)) { }
+        using (await session.SendAsync(Get("https://a.test/x"), context, TestContext.Current.CancellationToken)) { }
+        using (await session.SendAsync(Get("https://a.test/x", ("Accept", "a/b"), ("Accept-Language", "fr")), context, TestContext.Current.CancellationToken)) { }
         Assert.Equal([accept, "a/b"], _handler.Hops.Select(h => h.Header("Accept")));
         Assert.Equal(["de-DE,de;q=0.9", "fr"], _handler.Hops.Select(h => h.Header("Accept-Language")));
         using var plain = Session(_handler);
-        using (await plain.SendAsync(Get("https://a.test/x"), context)) { }
+        using (await plain.SendAsync(Get("https://a.test/x"), context, TestContext.Current.CancellationToken)) { }
         Assert.Null(_handler.Hops[^1].Header("Accept-Language"));
     }
 
@@ -193,7 +193,7 @@ public sealed class TransportRequestTests
     {
         using var session = Session(_handler);
         Seed(session.Cookies, "http://127.0.0.1:5555/", "sid=secret; Secure; HttpOnly; Path=/");
-        using (var response = await session.SendAsync(Get(url), RequestContext.TopLevelNavigation(null)))
+        using (var response = await session.SendAsync(Get(url), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))
             Assert.Equal(expected, response.FinalUrl.AbsoluteUri);
         var hop = Assert.Single(_handler.Hops);
         Assert.Equal(UriHostNameType.IPv4, hop.Url.HostNameType);
@@ -201,7 +201,7 @@ public sealed class TransportRequestTests
         // The loopback identity the cookie was stored under is also where it is sent.
         Assert.Equal(hop.Url.IsLoopback ? "sid=secret" : null, hop.Cookie());
         _handler.Redirect("https://a.test/", 302, url);
-        using (var redirected = await session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null)))
+        using (var redirected = await session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))
             Assert.Equal(expected, redirected.FinalUrl.AbsoluteUri);
         Assert.Equal(UriHostNameType.IPv4, _handler.Hops[^1].Url.HostNameType);
     }
@@ -245,8 +245,8 @@ public sealed class TransportRequestTests
         foreach (var mode in new[] { RedirectMode.Error, RedirectMode.Manual })
         {
             var context = RequestContext.Fetch(top, RequestMode.NoCors, redirect: mode);
-            Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://b.test/"), context))).Error);
-            using var sameOrigin = await session.SendAsync(Get("https://a.test/"), context);
+            Assert.Equal(TransportError.InvalidRequest, (await Fails(session.SendAsync(Get("https://b.test/"), context, TestContext.Current.CancellationToken))).Error);
+            using var sameOrigin = await session.SendAsync(Get("https://a.test/"), context, TestContext.Current.CancellationToken);
             Assert.Equal(ResponseTainting.Basic, sameOrigin.Tainting);
         }
         Assert.Equal(2, _handler.Hops.Count);
@@ -256,9 +256,9 @@ public sealed class TransportRequestTests
     public async Task MethodsAreNormalizedAndProtocolAndUserAgentApplied()
     {
         using var session = Session(_handler);
-        using (await session.SendAsync(Request("post", "https://a.test/1", "x"), RequestContext.TopLevelNavigation(null))) { }
-        using (await session.SendAsync(Request("patch", "https://a.test/2", "x"), RequestContext.TopLevelNavigation(null))) { }
-        using (await session.SendAsync(Get("https://a.test/3", ("User-Agent", "Custom/1")), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(Request("post", "https://a.test/1", "x"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
+        using (await session.SendAsync(Request("patch", "https://a.test/2", "x"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
+        using (await session.SendAsync(Get("https://a.test/3", ("User-Agent", "Custom/1")), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         var hops = _handler.Hops;
         Assert.Equal(["POST", "patch", "GET"], hops.Select(h => h.Method));
         Assert.All(hops, h => Assert.Equal(HttpVersion.Version20, h.Version));
@@ -266,7 +266,7 @@ public sealed class TransportRequestTests
         Assert.Equal("Custom/1", hops[2].Header("User-Agent"));
 
         using var custom = Session(_handler, new() { UserAgent = "Agent/2" });
-        using (await custom.SendAsync(Get("https://a.test/4"), RequestContext.TopLevelNavigation(null))) { }
+        using (await custom.SendAsync(Get("https://a.test/4"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         Assert.Equal("Agent/2", _handler.Hops[^1].Header("User-Agent"));
     }
 
@@ -276,9 +276,9 @@ public sealed class TransportRequestTests
         using var session = Session(_handler);
         HttpRequestMessage Forged() => Get("https://a.test/", ("Cookie", "evil=1"), ("Cookie2", "$Version=1"), ("Host", "evil.test"),
             ("Origin", "https://evil.test"));
-        using (await session.SendAsync(Forged(), RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Image))) { }
+        using (await session.SendAsync(Forged(), RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Image), TestContext.Current.CancellationToken)) { }
         Seed(session.Cookies, "https://a.test/", "a=1");
-        using (await session.SendAsync(Forged(), RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Image))) { }
+        using (await session.SendAsync(Forged(), RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Image), TestContext.Current.CancellationToken)) { }
         var (empty, stored) = (_handler.Hops[0], _handler.Hops[1]);
         Assert.Null(empty.Cookie());
         Assert.Equal("a=1", stored.Cookie());
@@ -295,7 +295,7 @@ public sealed class TransportRequestTests
     {
         using var session = Session(_handler);
         var request = Request("POST", "https://a.test/form", "hello", ("Content-Language", "de"), ("X-Custom", "1"));
-        using (await session.SendAsync(request, RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         var hop = Assert.Single(_handler.Hops);
         Assert.Equal("hello", Encoding.UTF8.GetString(hop.Body!));
         Assert.Equal("text/plain; charset=utf-8", hop.Header("Content-Type"));
@@ -310,7 +310,7 @@ public sealed class TransportRequestTests
         Seed(session.Cookies, "https://a.test/", "a=1");
         _handler.On("https://a.test/", 200, ("Set-Cookie", "b=2"));
         var context = RequestContext.TopLevelNavigation(null) with { Credentials = CredentialsMode.Omit };
-        using (await session.SendAsync(Get("https://a.test/"), context)) { }
+        using (await session.SendAsync(Get("https://a.test/"), context, TestContext.Current.CancellationToken)) { }
         Assert.Equal("a=1", Assert.Single(_handler.Hops).Cookie());
         Assert.Contains(session.Cookies.Snapshot(), c => c.Name == "b");
     }
@@ -321,7 +321,7 @@ public sealed class TransportRequestTests
         using var session = Session(_handler);
         Seed(session.Cookies, "https://a.test/", "a=1");
         _handler.On("https://a.test/", 200, ("Set-Cookie", "b=2"));
-        using var response = await session.SendAsync(Get("https://a.test/"), RequestContext.Fetch(Top("https://a.test/"), credentials: CredentialsMode.Omit));
+        using var response = await session.SendAsync(Get("https://a.test/"), RequestContext.Fetch(Top("https://a.test/"), credentials: CredentialsMode.Omit), TestContext.Current.CancellationToken);
         Assert.Equal(200, response.StatusCode);
         Assert.Null(Assert.Single(_handler.Hops).Cookie());
         Assert.Equal(["a"], session.Cookies.Snapshot().Select(c => c.Name));
@@ -336,8 +336,8 @@ public sealed class TransportRequestTests
         _handler.On("https://a.test/", 200, ("Set-Cookie", "a2=2"));
         _handler.On("https://b.test/", 200, ("Set-Cookie", "b2=2; SameSite=None; Secure"), ("Access-Control-Allow-Origin", "https://a.test"));
         var context = RequestContext.Fetch(Top("https://a.test/"));
-        using (await session.SendAsync(Get("https://a.test/"), context)) { }
-        using (var cors = await session.SendAsync(Get("https://b.test/"), context)) Assert.Equal(ResponseTainting.Cors, cors.Tainting);
+        using (await session.SendAsync(Get("https://a.test/"), context, TestContext.Current.CancellationToken)) { }
+        using (var cors = await session.SendAsync(Get("https://b.test/"), context, TestContext.Current.CancellationToken)) Assert.Equal(ResponseTainting.Cors, cors.Tainting);
         Assert.Equal(["a=1", null], _handler.Hops.Select(h => h.Cookie()));
         Assert.Equal(["a", "b", "a2"], session.Cookies.Snapshot().Select(c => c.Name));
     }
@@ -349,7 +349,7 @@ public sealed class TransportRequestTests
         Seed(session.Cookies, "https://b.test/", "b=1; SameSite=None; Secure");
         _handler.On("https://b.test/", 200, ("Set-Cookie", "b2=2; SameSite=None; Secure"), ("Access-Control-Allow-Origin", "https://a.test"),
             ("Access-Control-Allow-Credentials", "true"));
-        using (await session.SendAsync(Get("https://b.test/"), RequestContext.Fetch(Top("https://a.test/"), credentials: CredentialsMode.Include))) { }
+        using (await session.SendAsync(Get("https://b.test/"), RequestContext.Fetch(Top("https://a.test/"), credentials: CredentialsMode.Include), TestContext.Current.CancellationToken)) { }
         Assert.Equal("b=1", Assert.Single(_handler.Hops).Cookie());
         Assert.Contains(session.Cookies.Snapshot(), c => c.Name == "b2");
     }
@@ -362,7 +362,7 @@ public sealed class TransportRequestTests
         _handler.On("https://b.test/img", 200, ("Set-Cookie", "seen=1; SameSite=None; Secure"), ("X-Secret", "1"));
         _handler.On("https://b.test/anon", 200, ("Set-Cookie", "anon=1; SameSite=None; Secure"));
         var top = Top("https://a.test/");
-        using (var image = await session.SendAsync(Get("https://b.test/img"), RequestContext.Subresource(top, RequestDestination.Image)))
+        using (var image = await session.SendAsync(Get("https://b.test/img"), RequestContext.Subresource(top, RequestDestination.Image), TestContext.Current.CancellationToken))
         {
             Assert.Equal(ResponseTainting.Opaque, image.Tainting);
             Assert.Empty(image.GetScriptVisibleHeaders());
@@ -371,7 +371,7 @@ public sealed class TransportRequestTests
         }
         var sameOriginCredentials = new RequestContext
             { Destination = RequestDestination.Image, Client = top, Mode = RequestMode.NoCors, Credentials = CredentialsMode.SameOrigin };
-        using (var opaque = await session.SendAsync(Get("https://b.test/anon"), sameOriginCredentials)) Assert.Equal(ResponseTainting.Opaque, opaque.Tainting);
+        using (var opaque = await session.SendAsync(Get("https://b.test/anon"), sameOriginCredentials, TestContext.Current.CancellationToken)) Assert.Equal(ResponseTainting.Opaque, opaque.Tainting);
         Assert.Equal(["b=1", null], _handler.Hops.Select(h => h.Cookie()));
         Assert.Equal(["b", "seen"], session.Cookies.Snapshot().Select(c => c.Name));
     }
@@ -385,7 +385,7 @@ public sealed class TransportRequestTests
         _handler.On("http://b.test/", 200, ("Access-Control-Allow-Origin", "https://a.test"));
         async Task<string?> OriginOf(HttpRequestMessage request, RequestContext context)
         {
-            using (await session.SendAsync(request, context)) { }
+            using (await session.SendAsync(request, context, TestContext.Current.CancellationToken)) { }
             return _handler.Hops[^1].Header("Origin");
         }
         Assert.Null(await OriginOf(Get("https://a.test/"), RequestContext.Fetch(a)));
@@ -410,12 +410,12 @@ public sealed class TransportRequestTests
         _handler.Redirect("https://a.test/1", 302, "https://b.test/2");
         _handler.On("https://b.test/2", r => ScriptedHandler.Reply(r.Method == HttpMethod.Options ? 204 : 200,
             ("Access-Control-Allow-Origin", "https://a.test"), ("Access-Control-Allow-Headers", "x-custom")));
-        using var response = session.Send(Get("https://a.test/1", ("X-Custom", "1")), RequestContext.Fetch(Top("https://a.test/")));
+        using var response = session.Send(Get("https://a.test/1", ("X-Custom", "1")), RequestContext.Fetch(Top("https://a.test/")), TestContext.Current.CancellationToken);
         Assert.Equal(["GET https://a.test/1", "OPTIONS https://b.test/2", "GET https://b.test/2"], _handler.Hops.Select(h => h.Target));
         Assert.All(_handler.Hops, h => Assert.False(h.Sync));
         Assert.Equal(200, response.StatusCode);
 
-        using (await session.SendAsync(Get("https://a.test/3"), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(Get("https://a.test/3"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         Assert.False(_handler.Hops[^1].Sync);
     }
 
@@ -434,8 +434,8 @@ public sealed class TransportRequestTests
 #pragma warning disable xUnit1031
             using var request = Request("POST", "https://a.test/start", "body");
             using var response = synchronous
-                ? session.Send(request, RequestContext.TopLevelNavigation(null))
-                : session.SendAsync(request, RequestContext.TopLevelNavigation(null)).GetAwaiter().GetResult();
+                ? session.Send(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)
+                : session.SendAsync(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken).GetAwaiter().GetResult();
 #pragma warning restore xUnit1031
             Assert.Equal("https://a.test/end", response.FinalUrl.AbsoluteUri);
         }
@@ -453,9 +453,9 @@ public sealed class TransportRequestTests
             throw new InvalidOperationException();
         };
         using var session = Session(_handler, new() { Timeout = TimeSpan.FromMilliseconds(50) });
-        var asyncError = await Assert.ThrowsAsync<TaskCanceledException>(() => session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null)));
+        var asyncError = await Assert.ThrowsAsync<TaskCanceledException>(() => session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken));
         Assert.IsType<TimeoutException>(asyncError.InnerException);
-        var syncError = Assert.Throws<TaskCanceledException>(() => session.Send(Get("https://a.test/"), RequestContext.TopLevelNavigation(null)));
+        var syncError = Assert.Throws<TaskCanceledException>(() => session.Send(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken));
         Assert.IsType<TimeoutException>(syncError.InnerException);
     }
 
@@ -484,10 +484,10 @@ public sealed class TransportRequestTests
             {
                 var request = Get($"https://h{h}.test/{i}");
                 var context = RequestContext.Subresource(Top($"https://h{h}.test/"), RequestDestination.Script);
-                using var response = i % 2 == 0 ? await session.SendAsync(request, context) : session.Send(request, context);
+                using var response = i % 2 == 0 ? await session.SendAsync(request, context, TestContext.Current.CancellationToken) : session.Send(request, context, TestContext.Current.CancellationToken);
                 Assert.Equal(200, response.StatusCode);
             }
-        }));
+        }, TestContext.Current.CancellationToken));
         await Task.WhenAll(work);
         Assert.Equal(hosts * perHost, _handler.Hops.Count);
         Assert.Equal(hosts * perHost, session.Cookies.Snapshot().Count);
@@ -501,11 +501,11 @@ public sealed class TransportRequestTests
         var session = Session(_handler);
         session.Dispose();
         session.Dispose();
-        Assert.Throws<ObjectDisposedException>(() => { _ = session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null)); });
-        Assert.Throws<ObjectDisposedException>(() => session.Send(Get("https://a.test/"), RequestContext.TopLevelNavigation(null)));
+        Assert.Throws<ObjectDisposedException>(() => { _ = session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken); });
+        Assert.Throws<ObjectDisposedException>(() => session.Send(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken));
         // A caller-supplied handler is not disposed with the session.
         using var other = Session(_handler);
-        using (await other.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null))) { }
+        using (await other.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
     }
 
     [Fact]
@@ -521,8 +521,8 @@ public sealed class TransportRequestTests
         Assert.Same(SiteResolver.Default, session.Sites);
         Assert.NotNull(session.Cookies);
         Assert.True(session.CookiesEnabled);
-        Assert.Throws<ArgumentNullException>(() => session.Send(null!, RequestContext.TopLevelNavigation(null)));
-        Assert.Throws<ArgumentNullException>(() => { _ = session.SendAsync(Get("https://a.test/"), null!); });
+        Assert.Throws<ArgumentNullException>(() => session.Send(null!, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken));
+        Assert.Throws<ArgumentNullException>(() => { _ = session.SendAsync(Get("https://a.test/"), null!, TestContext.Current.CancellationToken); });
     }
 
     private sealed class CountingContext : SynchronizationContext

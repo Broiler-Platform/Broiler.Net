@@ -45,7 +45,7 @@ public sealed class Http2TransportTests
             using var reader = new StreamReader(context.Request.Body);
             await context.Response.WriteAsync($"{context.Request.Protocol}|{await reader.ReadToEndAsync()}|{context.Request.Headers.Cookie}");
         });
-        await server.StartAsync();
+        await server.StartAsync(TestContext.Current.CancellationToken);
 
         using var handler = new SocketsHttpHandler
         {

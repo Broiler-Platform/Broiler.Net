@@ -1,5 +1,6 @@
 using System.Text;
 using Broiler.Net.Cookies;
+using Xunit;
 
 namespace Broiler.Net.Tests;
 

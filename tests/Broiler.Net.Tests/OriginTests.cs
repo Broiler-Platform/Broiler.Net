@@ -49,7 +49,7 @@ public sealed class OriginTests
         using var session = Session(handler);
         Seed(session.Cookies, "https://a.test/", "a=1");
         var frame = Top("https://a.test/").CreateChild(new Uri("blob:https://a.test/uuid"));
-        using var response = await session.SendAsync(Get("https://a.test/data"), RequestContext.Fetch(frame));
+        using var response = await session.SendAsync(Get("https://a.test/data"), RequestContext.Fetch(frame), TestContext.Current.CancellationToken);
         Assert.Equal(ResponseTainting.Basic, response.Tainting);
         Assert.Equal("a=1", handler.Hops[0].Cookie());
     }

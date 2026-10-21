@@ -21,7 +21,7 @@ public sealed class TransportCookieTests : IDisposable
 
     private async Task<string?> CookieSent(HttpRequestMessage request, RequestContext context)
     {
-        using (await _session.SendAsync(request, context)) { }
+        using (await _session.SendAsync(request, context, TestContext.Current.CancellationToken)) { }
         return _handler.Hops[^1].Cookie();
     }
 
@@ -74,7 +74,7 @@ public sealed class TransportCookieTests : IDisposable
         _handler.Redirect("https://b.test/mid", 302, "https://a.test/end");
         async Task<SameSiteStatus> StatusOf(string url, RequestContext context)
         {
-            using var response = await _session.SendAsync(Get(url), context);
+            using var response = await _session.SendAsync(Get(url), context, TestContext.Current.CancellationToken);
             return response.SameSite;
         }
         Assert.Equal(SameSiteStatus.SameSite, await StatusOf("https://a.test/", RequestContext.TopLevelNavigation(Top("https://www.a.test/"))));
@@ -88,9 +88,9 @@ public sealed class TransportCookieTests : IDisposable
     {
         _handler.Redirect("https://a.test/start", 302, "https://b.test/mid");
         _handler.Redirect("https://b.test/mid", 302, "https://a.test/end");
-        using (await _session.SendAsync(Get("https://a.test/start"), RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Script))) { }
+        using (await _session.SendAsync(Get("https://a.test/start"), RequestContext.Subresource(Top("https://a.test/"), RequestDestination.Script), TestContext.Current.CancellationToken)) { }
         Assert.Equal([All, null, NoneOnly], _handler.Hops.Select(h => h.Cookie()));
-        using (await _session.SendAsync(Get("https://a.test/start"), RequestContext.TopLevelNavigation(Top("https://a.test/")))) { }
+        using (await _session.SendAsync(Get("https://a.test/start"), RequestContext.TopLevelNavigation(Top("https://a.test/")), TestContext.Current.CancellationToken)) { }
         Assert.Equal([All, null, LaxAndNone], _handler.Hops.Skip(3).Select(h => h.Cookie()));
     }
 
@@ -131,9 +131,9 @@ public sealed class TransportCookieTests : IDisposable
         var top = Top("https://a.test/");
         _handler.On("https://a.test/set", 200, ("Set-Cookie", "s2=1; SameSite=Strict; Path=/"), ("Set-Cookie", "l2=1; SameSite=Lax; Path=/"),
             ("Set-Cookie", "d2=1; Path=/"), ("Set-Cookie", "n2=1; SameSite=None; Secure; Path=/"));
-        using (await _session.SendAsync(Get("https://a.test/set"), RequestContext.NestedNavigation(top, top.CreateChild(new Uri("https://b.test/ad"))))) { }
+        using (await _session.SendAsync(Get("https://a.test/set"), RequestContext.NestedNavigation(top, top.CreateChild(new Uri("https://b.test/ad"))), TestContext.Current.CancellationToken)) { }
         Assert.Equal(["strict", "lax", "none", "n2"], _session.Cookies.Snapshot().Select(c => c.Name));
-        using (await _session.SendAsync(Get("https://a.test/set"), RequestContext.NestedNavigation(top, top))) { }
+        using (await _session.SendAsync(Get("https://a.test/set"), RequestContext.NestedNavigation(top, top), TestContext.Current.CancellationToken)) { }
         Assert.Equal(["strict", "lax", "none", "n2", "s2", "l2", "d2"], _session.Cookies.Snapshot().Select(c => c.Name));
     }
 
@@ -147,7 +147,7 @@ public sealed class TransportCookieTests : IDisposable
         Assert.Equal(NoneOnly, await CookieSent(Request("POST", "https://a.test/api", "x"), RequestContext.Fetch(sandboxed, RequestMode.NoCors, CredentialsMode.Include)));
         Assert.Equal(NoneOnly, await CookieSent("https://a.test/frame", RequestContext.NestedNavigation(sandboxed, sandboxed)));
         _handler.On("https://a.test/p", 200, ("Set-Cookie", "p=1; Secure; Partitioned; SameSite=None; Path=/"), ("Set-Cookie", "s2=1; SameSite=Strict"));
-        using (var response = await _session.SendAsync(Get("https://a.test/p"), context)) Assert.Equal(ResponseTainting.Opaque, response.Tainting);
+        using (var response = await _session.SendAsync(Get("https://a.test/p"), context, TestContext.Current.CancellationToken)) Assert.Equal(ResponseTainting.Opaque, response.Tainting);
         Assert.Equal(new CookiePartitionKey(Site("https://a.test/"), true), PartitionOf("p"));
         Assert.DoesNotContain(_session.Cookies.Snapshot(), c => c.Name == "s2");
     }
@@ -183,11 +183,11 @@ public sealed class TransportCookieTests : IDisposable
         _handler.On("https://www.a.test/same", 200, ("Set-Cookie", "same" + Partitioned));
         _handler.On("https://b.test/frame", 200, ("Set-Cookie", "frame" + Partitioned));
         _handler.On("https://b.test/inframe", 200, ("Set-Cookie", "inframe" + Partitioned));
-        using (await _session.SendAsync(Get("https://b.test/nav"), RequestContext.TopLevelNavigation(a))) { }
-        using (await _session.SendAsync(Get("https://b.test/sub"), RequestContext.Subresource(a, RequestDestination.Script))) { }
-        using (await _session.SendAsync(Get("https://www.a.test/same"), RequestContext.Subresource(a, RequestDestination.Script))) { }
-        using (await _session.SendAsync(Get("https://b.test/frame"), RequestContext.NestedNavigation(a, a))) { }
-        using (await _session.SendAsync(Get("https://b.test/inframe"), RequestContext.Subresource(frame, RequestDestination.Script))) { }
+        using (await _session.SendAsync(Get("https://b.test/nav"), RequestContext.TopLevelNavigation(a), TestContext.Current.CancellationToken)) { }
+        using (await _session.SendAsync(Get("https://b.test/sub"), RequestContext.Subresource(a, RequestDestination.Script), TestContext.Current.CancellationToken)) { }
+        using (await _session.SendAsync(Get("https://www.a.test/same"), RequestContext.Subresource(a, RequestDestination.Script), TestContext.Current.CancellationToken)) { }
+        using (await _session.SendAsync(Get("https://b.test/frame"), RequestContext.NestedNavigation(a, a), TestContext.Current.CancellationToken)) { }
+        using (await _session.SendAsync(Get("https://b.test/inframe"), RequestContext.Subresource(frame, RequestDestination.Script), TestContext.Current.CancellationToken)) { }
         Assert.Equal(new CookiePartitionKey(Site("https://b.test/"), false), PartitionOf("nav"));
         Assert.Equal(new CookiePartitionKey(Site("https://a.test/"), true), PartitionOf("sub"));
         Assert.Equal(new CookiePartitionKey(Site("https://a.test/"), false), PartitionOf("same"));
@@ -208,7 +208,7 @@ public sealed class TransportCookieTests : IDisposable
         _handler.Redirect("https://a.test/start", 302, "https://b.test/mid");
         _handler.Redirect("https://b.test/mid", 302, "https://a.test/end");
         _handler.On("https://a.test/end", 200, ("Set-Cookie", "p" + Partitioned));
-        using (await _session.SendAsync(Get("https://a.test/start"), RequestContext.Subresource(a, RequestDestination.Script))) { }
+        using (await _session.SendAsync(Get("https://a.test/start"), RequestContext.Subresource(a, RequestDestination.Script), TestContext.Current.CancellationToken)) { }
         // The bounce makes the last hop cross-site for SameSite, but its response still belongs to a.test's own partition.
         Assert.Equal("none=1; fp=1", _handler.Hops[^1].Cookie());
         Assert.Equal(new CookiePartitionKey(Site("https://a.test/"), false), PartitionOf("p"));
@@ -222,13 +222,13 @@ public sealed class TransportCookieTests : IDisposable
         var top = Top("https://a.test/");
         _handler.Redirect("https://b.test/r", 302, "https://a.test/landing");
         var context = RequestContext.NestedNavigation(top, top) with { Redirect = RedirectMode.Manual };
-        using var redirect = await _session.SendAsync(Get("https://b.test/r"), context);
+        using var redirect = await _session.SendAsync(Get("https://b.test/r"), context, TestContext.Current.CancellationToken);
         Assert.Equal(302, redirect.StatusCode);
         // A navigation sees the redirect itself (Fetch makes only other requests opaque-redirects).
         Assert.Equal(ResponseTainting.Basic, redirect.Tainting);
         // Following Location as a new request would launder the cross-site hop out of the chain.
         Assert.Equal(All, await CookieSent("https://a.test/landing", context));
-        using (var landing = await _session.SendAsync(Get("https://a.test/landing"), context with { RedirectChain = redirect.UrlList }))
+        using (var landing = await _session.SendAsync(Get("https://a.test/landing"), context with { RedirectChain = redirect.UrlList }, TestContext.Current.CancellationToken))
         {
             Assert.Equal(["https://b.test/r", "https://a.test/landing"], landing.UrlList.Select(u => u.AbsoluteUri));
             Assert.Equal(SameSiteStatus.CrossSite, landing.SameSite);
@@ -240,7 +240,7 @@ public sealed class TransportCookieTests : IDisposable
     public async Task OpaqueTopLevelSitesHaveNoPartition()
     {
         _handler.On("https://b.test/p", 200, ("Set-Cookie", "p=1; Secure; Partitioned; SameSite=None"), ("Set-Cookie", "u=1; Secure; SameSite=None"));
-        using (await _session.SendAsync(Get("https://b.test/p"), RequestContext.Subresource(Top("data:text/html,x"), RequestDestination.Image))) { }
+        using (await _session.SendAsync(Get("https://b.test/p"), RequestContext.Subresource(Top("data:text/html,x"), RequestDestination.Image), TestContext.Current.CancellationToken)) { }
         Assert.DoesNotContain(_session.Cookies.Snapshot(), c => c.Name == "p");
         Assert.Null(PartitionOf("u"));
     }
@@ -306,7 +306,7 @@ public sealed class TransportCookieTests : IDisposable
         Seed(store, "https://a.test/", "a=1");
         using var session = Session(_handler, new() { Cookies = store, CookiesEnabled = false });
         _handler.On("https://a.test/", 200, ("Set-Cookie", "b=1"));
-        using (await session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         Assert.Null(_handler.Hops[^1].Cookie());
         Assert.False(session.CookiesEnabled);
         Assert.True(session.TryGetCookie(Top("https://a.test/"), out var cookie));
@@ -324,13 +324,13 @@ public sealed class TransportCookieTests : IDisposable
         using var session = Session(_handler, new() { Cookies = store, CookieObserverError = reported.Add });
         store.Changed += (_, batch) => { if (batch.Changes.Any(c => c.Current?.Name is "x" or "d")) throw new IOException("disk full"); };
         _handler.On("https://a.test/", 200, ("Set-Cookie", "x=1"), ("Set-Cookie", "y=2"));
-        using (var response = await session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null)))
+        using (var response = await session.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken))
             Assert.Equal(200, response.StatusCode);
         Assert.Equal(["x", "y"], store.Snapshot().Select(c => c.Name));
         Assert.True(session.TrySetCookie(Top("https://a.test/"), "d=1"));
         Assert.Equal(2, reported.Count);
         Assert.Contains(store.Snapshot(), c => c.Name == "d");
         using var unreported = Session(_handler, new() { Cookies = store });
-        using (await unreported.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null))) { }
+        using (await unreported.SendAsync(Get("https://a.test/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
     }
 }

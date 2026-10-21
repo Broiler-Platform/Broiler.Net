@@ -20,14 +20,14 @@ public sealed class TransportLoopbackTests
                 ("Set-Cookie", "exp=3; Expires=Wed, 21 Oct 2037 07:28:00 GMT; Path=/")])
             : LoopbackServer.Response(200, []));
         using var session = Session();
-        using (await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/set")), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/set")), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         var cookies = session.Cookies.Snapshot();
         Assert.Equal(["a", "lat", "exp"], cookies.Select(c => c.Name));
         Assert.Equal(["1, b=2", "café", "3"], cookies.Select(c => c.Value));
         // The comma inside Expires did not split the field (the date is then capped at 400 days).
         Assert.Equal(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero).AddDays(400), cookies[2].Expires);
 
-        using (await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/echo")), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/echo")), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         var echo = server.Requests.Last();
         Assert.Equal(1, echo.HeaderCount("Cookie"));
         Assert.Equal("a=1, b=2; lat=café; exp=3", echo.Header("Cookie"));
@@ -44,9 +44,9 @@ public sealed class TransportLoopbackTests
         });
         using var session = Session();
         var request = new HttpRequestMessage(HttpMethod.Post, server.Url("/r1")) { Content = new StringContent("form") };
-        using var response = await session.SendAsync(request, RequestContext.TopLevelNavigation(null));
+        using var response = await session.SendAsync(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken);
         Assert.Equal(3, response.UrlList.Count);
-        Assert.Equal("GET ", await response.Message.Content.ReadAsStringAsync());
+        Assert.Equal("GET ", await response.Message.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal([null, "h1=1", "h1=1; h2=2"], server.Requests.Select(r => r.Header("Cookie")));
         Assert.Equal(["POST", "GET", "GET"], server.Requests.Select(r => r.Method));
         Assert.Equal(["h1", "h2", "h3"], session.Cookies.Snapshot().Select(c => c.Name));
@@ -60,9 +60,9 @@ public sealed class TransportLoopbackTests
             : LoopbackServer.Response(200, [("Content-Type", "text/plain")], request.Body));
         using var session = Session();
         var request = new HttpRequestMessage(HttpMethod.Put, server.Url("/start")) { Content = new ByteArrayContent([1, 2, 3]) };
-        using var response = session.Send(request, RequestContext.TopLevelNavigation(null));
+        using var response = session.Send(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken);
         using var body = new MemoryStream();
-        response.Message.Content.ReadAsStream().CopyTo(body);
+        response.Message.Content.ReadAsStream(TestContext.Current.CancellationToken).CopyTo(body);
         Assert.Equal([1, 2, 3], body.ToArray());
         Assert.Equal(server.Url("/end"), response.FinalUrl.AbsoluteUri);
         Assert.All(server.Requests, r => Assert.Equal(BroilerUserAgent.Value, r.Header("User-Agent")));
@@ -75,8 +75,8 @@ public sealed class TransportLoopbackTests
         using (var gzip = new GZipStream(compressed, CompressionLevel.Fastest, leaveOpen: true)) gzip.Write(Encoding.UTF8.GetBytes("hello gzip"));
         using var server = new LoopbackServer(_ => LoopbackServer.Response(200, [("Content-Encoding", "gzip")], compressed.ToArray()));
         using var session = Session();
-        using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/")), RequestContext.TopLevelNavigation(null));
-        Assert.Equal("hello gzip", await response.Message.Content.ReadAsStringAsync());
+        using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/")), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken);
+        Assert.Equal("hello gzip", await response.Message.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Contains("gzip", Assert.Single(server.Requests).Header("Accept-Encoding"));
     }
 
@@ -89,7 +89,7 @@ public sealed class TransportLoopbackTests
         using var server = new LoopbackServer(_ => LoopbackServer.Response(200, [("Set-Cookie", "s=1; Secure; Path=/")]));
         using var session = Session();
         var url = $"http://{host}:{server.Port}/";
-        using (await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), RequestContext.TopLevelNavigation(null))) { }
+        using (await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, url), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken)) { }
         Assert.StartsWith(host.TrimEnd('.').ToLowerInvariant(), Assert.Single(server.Requests).Header("Host")!.ToLowerInvariant());
         // Localhost is a secure context for cookies, and the request really stayed on this machine.
         Assert.True(Assert.Single(session.Cookies.Snapshot()).Secure);
@@ -104,8 +104,8 @@ public sealed class TransportLoopbackTests
         using (ipv4)
         {
             using var session = Session();
-            using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"http://localhost:{ipv6.Port}/"), RequestContext.TopLevelNavigation(null));
-            Assert.Equal("::1", await response.Message.Content.ReadAsStringAsync());
+            using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"http://localhost:{ipv6.Port}/"), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken);
+            Assert.Equal("::1", await response.Message.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             Assert.Single(ipv6.Requests);
             Assert.Empty(ipv4.Requests);
         }
@@ -133,7 +133,7 @@ public sealed class TransportLoopbackTests
         TransportTest.Seed(session.Cookies, server.Url("/"), "sid=secret; Secure; HttpOnly; SameSite=None; Path=/");
         // Without the canonical address the name would go to DNS or the system proxy, with the Secure cookie.
         using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, $"http://{host}:{server.Port}/"),
-            RequestContext.TopLevelNavigation(DocumentRequestContext.CreateTopLevel(new Uri("https://evil.example/"))));
+            RequestContext.TopLevelNavigation(DocumentRequestContext.CreateTopLevel(new Uri("https://evil.example/"))), TestContext.Current.CancellationToken);
         Assert.Equal(server.Url("/"), response.FinalUrl.AbsoluteUri);
         var request = Assert.Single(server.Requests);
         Assert.Equal($"127.0.0.1:{server.Port}", request.Header("Host"));
@@ -150,8 +150,8 @@ public sealed class TransportLoopbackTests
         var request = new HttpRequestMessage(HttpMethod.Post, server.Url("/form")) { Content = new StringContent("a=1") };
         request.Headers.TransferEncodingChunked = true;
         request.Headers.ConnectionClose = true;
-        using var response = session.Send(request, RequestContext.TopLevelNavigation(null));
-        Assert.Equal("GET", await response.Message.Content.ReadAsStringAsync());
+        using var response = session.Send(request, RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken);
+        Assert.Equal("GET", await response.Message.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var (post, get) = (server.Requests.First(), server.Requests.Last());
         Assert.Equal("a=1", Encoding.UTF8.GetString(post.Body));
         Assert.Equal("3", post.Header("Content-Length"));
@@ -167,7 +167,7 @@ public sealed class TransportLoopbackTests
         var request = new HttpRequestMessage(HttpMethod.Get, server.Url("/x"));
         Assert.True(request.Headers.TryAddWithoutValidation("X-Foo", "a\r\nCookie: injected=1"));
         var error = await Assert.ThrowsAsync<TransportException>(() =>
-            session.SendAsync(request, RequestContext.Fetch(DocumentRequestContext.CreateTopLevel(new Uri(server.Url("/"))), credentials: CredentialsMode.Omit)));
+            session.SendAsync(request, RequestContext.Fetch(DocumentRequestContext.CreateTopLevel(new Uri(server.Url("/"))), credentials: CredentialsMode.Omit), TestContext.Current.CancellationToken));
         Assert.Equal(TransportError.InvalidRequest, error.Error);
         Assert.Empty(server.Requests);
     }
@@ -179,7 +179,7 @@ public sealed class TransportLoopbackTests
             ? LoopbackServer.Response(302, [("Location", Encoding.Latin1.GetString(Encoding.UTF8.GetBytes("/café")))])
             : LoopbackServer.Response(200, []));
         using var session = Session();
-        using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/start")), RequestContext.TopLevelNavigation(null));
+        using var response = await session.SendAsync(new HttpRequestMessage(HttpMethod.Get, server.Url("/start")), RequestContext.TopLevelNavigation(null), TestContext.Current.CancellationToken);
         Assert.Equal(server.Url("/caf%C3%A9"), response.FinalUrl.AbsoluteUri);
         Assert.Equal("/caf%C3%A9", server.Requests.Last().Target);
     }

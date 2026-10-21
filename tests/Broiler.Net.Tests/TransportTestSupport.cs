@@ -134,7 +134,10 @@ internal static class TransportTest
 /// <summary>A fact that is skipped where the OS has no IPv6 stack.</summary>
 internal sealed class Ipv6FactAttribute : FactAttribute
 {
-    public Ipv6FactAttribute()
+    public Ipv6FactAttribute(
+        [System.Runtime.CompilerServices.CallerFilePath] string? sourceFilePath = null,
+        [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = -1)
+        : base(sourceFilePath, sourceLineNumber)
     {
         if (!Socket.OSSupportsIPv6) Skip = "IPv6 is not available.";
     }
